@@ -25,6 +25,7 @@ public class RegistrationTests extends TestBase {
         password = faker.name().firstName();
     }
 
+    // todo move to specs
     @Test
     public void successfulRegistrationTest(){
         RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
@@ -99,4 +100,7 @@ public class RegistrationTests extends TestBase {
         String actualError = secondRegistrationResponse.username().getFirst();
         assertThat(actualError).isEqualTo(expectedError);
     }
+
+    // todo add more negative tests
+
 }
