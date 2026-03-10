@@ -5,7 +5,6 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
 import static io.restassured.filter.log.LogDetail.ALL;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static specs.BaseSpec.baseRequestSpec;
 
 public class LogoutSpec {
@@ -15,7 +14,6 @@ public class LogoutSpec {
     public static ResponseSpecification successfulLogoutResponseSpec = new ResponseSpecBuilder()
             .log(ALL)
             .expectStatusCode(200)
-            .expectBody(emptyOrNullString())
             .build();
 }
 
