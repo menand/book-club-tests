@@ -148,7 +148,7 @@ public class RegistrationTests_with_model_examples {
                 .as(ExistingUserResponseRecordsModel.class);
 
         String expectedError = "A user with that username already exists.";
-        assertEquals(expectedError, response.username().getFirst());
+        assertEquals(expectedError, response.username().get(0));
     }
 
     @Test

@@ -3,7 +3,6 @@ package tests;
 import models.registration.ExistingUserResponseModel;
 import models.registration.RegistrationBodyModel;
 import models.registration.SuccessfulRegistrationResponseModel;
-import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static specs.registration.RegistrationSpec.existingUserRegistrationResponseSpec;
 import static specs.registration.RegistrationSpec.registrationRequestSpec;
 import static specs.registration.RegistrationSpec.successfulRegistrationResponseSpec;
+import static tests.TestData.REGISTRATION_EXISTING_USER_ERROR;
+import static tests.TestData.REGISTRATION_IP_REGEXP;
 
 public class RegistrationTests extends TestBase {
 
@@ -20,9 +21,9 @@ public class RegistrationTests extends TestBase {
 
     @BeforeEach
     public void prepareTestData() {
-        Faker faker = new Faker();
-        username = faker.name().firstName();
-        password = faker.name().firstName();
+        // оставляем генерацию данных в тесте, чтобы каждый запуск был с новыми пользователями
+        username = "user_" + System.currentTimeMillis();
+        password = "pass_" + System.currentTimeMillis();
     }
 
     @Test
@@ -45,9 +46,7 @@ public class RegistrationTests extends TestBase {
         assertThat(registrationResponse.lastName()).isEqualTo("");
         assertThat(registrationResponse.email()).isEqualTo("");
 
-        String ipAddrRegexp = "^((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}"
-                + "(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$";
-        assertThat(registrationResponse.remoteAddr()).matches(ipAddrRegexp);
+        assertThat(registrationResponse.remoteAddr()).matches(REGISTRATION_IP_REGEXP);
     }
 
     @Test
@@ -76,8 +75,8 @@ public class RegistrationTests extends TestBase {
                 .extract()
                 .as(ExistingUserResponseModel.class);
 
-        String expectedError = "A user with that username already exists.";
-        String actualError = secondRegistrationResponse.username().getFirst();
+        String expectedError = REGISTRATION_EXISTING_USER_ERROR;
+        String actualError = secondRegistrationResponse.username().get(0);
         assertThat(actualError).isEqualTo(expectedError);
     }
 

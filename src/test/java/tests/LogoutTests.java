@@ -9,15 +9,14 @@ import static specs.login.LoginSpec.loginRequestSpec;
 import static specs.login.LoginSpec.successfulLoginResponseSpec;
 import static specs.logout.LogoutSpec.logoutRequestSpec;
 import static specs.logout.LogoutSpec.successfulLogoutResponseSpec;
+import static tests.TestData.LOGIN_USERNAME;
+import static tests.TestData.LOGIN_PASSWORD;
 
 public class LogoutTests extends TestBase {
 
-    String username = "qaguru";
-    String password = "qaguru123";
-
     @Test
     public void successfulLogoutTest(){
-        LoginBodyModel loginData = new LoginBodyModel(username, password);
+        LoginBodyModel loginData = new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD);
 
         String refreshToken = given(loginRequestSpec)
                 .body(loginData)
