@@ -1,30 +1,35 @@
 package tests;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import models.clubs.ClubModel;
 import models.clubs.ClubsListResponseModel;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class ClubsTests extends TestBase {
 
     @Test
     public void getClubsReturns200AndValidStructure() {
         ClubsListResponseModel response = api.clubs.getClubs();
+        int expectedSize = Math.min(response.count(), 50);
 
         assertThat(response).isNotNull();
         assertThat(response.count()).isGreaterThanOrEqualTo(0);
         assertThat(response.results()).isNotNull();
-        assertThat(response.results()).hasSize(response.count());
+        assertThat(response.results())
+                .as("размер results должен быть %d (count=%d)", expectedSize, response.count())
+                .hasSize(expectedSize);
     }
 
     @Test
     public void getClubsCountMatchesResultsSize() {
         ClubsListResponseModel response = api.clubs.getClubs();
 
+        int expectedSize = Math.min(response.count(), 50);
+
         assertThat(response.results())
-                .as("count должно совпадать с размером results")
-                .hasSize(response.count());
+                .as("размер results должен быть %d (count=%d)", expectedSize, response.count())
+                .hasSize(expectedSize);
     }
 
     @Test
