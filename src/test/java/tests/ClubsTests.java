@@ -6,10 +6,10 @@ import models.clubs.ClubModel;
 import models.clubs.ClubsListResponseModel;
 import org.junit.jupiter.api.Test;
 
-public class ClubsTests extends TestBase {
+class ClubsTests extends TestBase {
 
     @Test
-    public void getClubsReturns200AndValidStructure() {
+    void getClubsReturns200AndValidStructure() {
         ClubsListResponseModel response = api.clubs.getClubs();
         int expectedSize = Math.min(response.count(), 50);
 
@@ -22,7 +22,7 @@ public class ClubsTests extends TestBase {
     }
 
     @Test
-    public void getClubsCountMatchesResultsSize() {
+    void getClubsCountMatchesResultsSize() {
         ClubsListResponseModel response = api.clubs.getClubs();
 
         int expectedSize = Math.min(response.count(), 50);
@@ -33,7 +33,7 @@ public class ClubsTests extends TestBase {
     }
 
     @Test
-    public void getClubsEachClubHasRequiredFields() {
+    void getClubsEachClubHasRequiredFields() {
         ClubsListResponseModel response = api.clubs.getClubs();
 
         for (ClubModel club : response.results()) {
@@ -51,7 +51,7 @@ public class ClubsTests extends TestBase {
     }
 
     @Test
-    public void getClubsPaginationFieldsPresent() {
+    void getClubsPaginationFieldsPresent() {
         ClubsListResponseModel response = api.clubs.getClubs();
 
         assertThat(response.count()).isNotNull();

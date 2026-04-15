@@ -9,7 +9,7 @@ public class TestBase {
     protected static final ApiClient api = new ApiClient();
 
     @BeforeAll
-    public static void setUp() {
+    static void setUp() {
         RestAssured.baseURI = "https://book-club.qa.guru";
     }
 }
