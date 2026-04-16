@@ -2,203 +2,152 @@
 
 [![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/)
 [![JUnit](https://img.shields.io/badge/Test_Framework-JUnit_6-green.svg)](https://junit.org/junit5/)
-[![RestAssured](https://img.shields.io/badge/API_Testing-RestAssured-orange.svg)](https://rest-assured.io/)
+[![RestAssured](https://img.shields.io/badge/API_Testing-RestAssured_6-orange.svg)](https://rest-assured.io/)
 [![Allure](https://img.shields.io/badge/Reporting-Allure-purple.svg)](https://docs.qameta.io/allure/)
 
-## Описание проекта
+Фреймворк для автоматизированного тестирования API сервиса Book Club. Покрытие: аутентификация, регистрация, управление профилями, книжные клубы.
 
-Этот проект представляет собой фреймворк для автоматизированного тестирования API сервиса Book Club. Проект реализован на Java с использованием современных подходов и лучших практик в области тестирования API.
+## Архитектура
 
-Фреймворк предоставляет комплексное покрытие функциональности API, включая аутентификацию, регистрацию пользователей, управление профилями и работу с книжными клубами. Архитектура проекта следует принципам модульности и переиспользования кода.
+### API-клиенты (Page Object Model для API)
 
-## Архитектурные особенности
+`ApiClient` — единая точка доступа к эндпоинт-клиентам:
 
-Проект построен с использованием следующих ключевых паттернов и подходов:
+- `AuthApiClient` — аутентификация (`/auth/token/`, `/auth/logout/`)
+- `UsersApiClient` — пользователи (`/users/register/`, `/users/me/`)
+- `ClubsApiClient` — клубы (`/clubs/`)
 
-### 1. Page Object Model для API
+Каждый клиент инкапсулирует все сценарии (позитивные и негативные) для своего эндпоинта. Тесты не используют `given()` напрямую — только через клиенты.
 
-Реализован через класс `ApiClient`, который служит единой точкой доступа ко всем API-клиентам:
-- `AuthApiClient` - для операций аутентификации
-- `UsersApiClient` - для управления пользователями
-- `ClubsApiClient` - для работы с книжными клубами
+### Спецификации (Specs)
 
-### 2. Спецификации (Specs)
+Переиспользуемые настройки запросов и валидации ответов:
 
-Используется паттерн спецификаций для переиспользования настроек запросов и валидации ответов:
-- `BaseSpec` - базовая спецификация с общими настройками
-- `LoginSpec`, `RegistrationSpec`, `UserSpec`, `ClubsSpec` - спецификации для конкретных эндпоинтов
+- `BaseSpec` — базовый `RequestSpecification` (basePath `/api/v1`, JSON, Allure-фильтр)
+- `UserSpec.authRequestSpec(token)` — подстановка `Authorization: Bearer`
+- `LoginSpec`, `RegistrationSpec`, `LogoutSpec`, `ClubsSpec`, `UserSpec` — response-спеки с JSON Schema валидацией
 
-### 3. Модели данных
+### Модели данных
 
-Используются record-ы Java для представления моделей данных, что обеспечивает:
-- Неизменяемость
-- Безопасность потоков
-- Минимальный boilerplate код
-- Автоматическую реализацию equals(), hashCode(), toString()
+Все модели — **Java records**. Единый стиль accessors без геттеров: `response.access()`, `user.firstName()`.
 
-### 4. Валидация ответов
+```java
+public record LoginBodyModel(String username, String password) {}
+```
 
-- JSON Schema валидация через `json-schema-validator`
-- Гибкие проверки с использованием Hamcrest и AssertJ
-- Автоматическая валидация структуры ответов
+`UpdateUserModel` использует `@JsonInclude(NON_NULL)` для PATCH-запросов.
 
-### 5. Отчетность
+### Валидация ответов
 
-- Интеграция с Allure для генерации детализированных отчетов
-- Кастомные шаблоны для отображения запросов и ответов
-- Поддержка аттачментов (запросы, ответы)
+- JSON Schema валидация через `json-schema-validator` в response-спеках
+- AssertJ для бизнес-проверок в тестах
+
+### Отчетность
+
+Allure с кастомными FreeMarker-шаблонами (`resources/tpl/`) для запросов/ответов.
 
 ## Структура проекта
 
 ```
-src/
-├── test/
-│   ├── java/
-│   │   ├── api/                # API-клиенты
-│   │   ├── models/            # Модели данных
-│   │   ├── specs/             # Спецификации запросов/ответов
-│   │   └── tests/             # Тесты
-│   └── resources/
-│       ├── schemas/          # JSON Schema для валидации
-│       └── tpl/              # Шаблоны для Allure
+src/test/
+├── java/
+│   ├── api/                # API-клиенты (ApiClient, AuthApiClient, UsersApiClient, ClubsApiClient)
+│   ├── allure/             # CustomAllureListener
+│   ├── models/             # Java records (общий ValidationErrorResponseModel)
+│   ├── specs/              # Request/Response спецификации
+│   │   ├── BaseSpec
+│   │   ├── login/LoginSpec
+│   │   ├── registration/RegistrationSpec
+│   │   ├── logout/LogoutSpec
+│   │   ├── clubs/ClubsSpec
+│   │   └── users/UserSpec
+│   └── tests/              # Тестовые классы (extend TestBase)
+└── resources/
+    ├── schemas/            # JSON Schema для валидации ответов
+    ├── tpl/                # FreeMarker-шаблоны для Allure
+    └── junit-platform.properties
 ```
 
 ## Зависимости
 
-Проект использует следующие основные зависимости:
-
-- **Тестирование:** JUnit 6, RestAssured, AssertJ
-- **Логирование:** SLF4J, Log4j
+- **Тестирование:** JUnit 6, RestAssured 6, AssertJ
 - **Валидация:** JSON Schema Validator
 - **Отчетность:** Allure
 - **Утилиты:** Jackson
-- **Форматирование:** Spotless (Google Java Format)
+- **Форматирование:** Spotless (Google Java Format AOSP, без wildcard-импортов)
 
-## Настройка окружения
+## Требования
 
-### Предварительные требования
-
-- Java 21 или выше
-- Gradle 8.x
+- Java 21+
 - Git
-
-### Установка
-
-1. Клонируйте репозиторий:
-```bash
-git clone https://github.com/menand/book-club-tests.git
-cd book-club-tests
-```
-
-2. Установите зависимости:
-```bash
-./gradlew build
-```
 
 ## Запуск тестов
 
-### Запуск всех тестов
 ```bash
-./gradlew test
+./gradlew test                                    # все тесты (параллельно по классам)
+./gradlew test --tests LoginTests                 # один класс
+./gradlew test -Dgroups=smoke,regression          # по тегам
+./gradlew spotlessApply                           # автоформатирование
+./gradlew spotlessCheck                           # проверка форматирования
+./gradlew allureServe                             # Allure-отчет на :19432
 ```
 
-### Запуск тестов с параметрами
-```bash
-# Запуск тестов с определенными тегами
-./gradlew test -Dgroups=smoke,regression
+### Параллельный запуск
 
-# Запуск конкретного теста
-./gradlew test --tests LoginTests
-```
+Тесты выполняются параллельно на уровне классов (`parallelism=4`). Методы внутри класса идут последовательно. Конфигурация: `src/test/resources/junit-platform.properties`.
 
-### Генерация отчетов Allure
-
-После выполнения тестов сгенерируйте отчет Allure:
-
-```bash
-# Генерация отчета
-./gradlew allureReport
-
-# Запуск сервера Allure для просмотра отчета
-./gradlew allureServe
-```
-
-Отчет будет доступен по адресу `http://localhost:19432`.
+Для динамических данных (регистрация) используется `UUID.randomUUID()` вместо `System.currentTimeMillis()` для потокобезопасности.
 
 ## Конфигурация
 
-Конфигурационные параметры можно задавать через системные свойства:
-
-| Параметр | Описание | Значение по умолчанию |
-|---------|---------|---------------------|
-| `groups` | Теги для запуска тестов | - |
-| `allure.results.directory` | Директория для результатов Allure | build/allure-results |
+| Параметр | Описание | По умолчанию |
+|---------|---------|-------------|
+| `groups` | Теги для запуска тестов | — |
+| `allure.results.directory` | Директория результатов Allure | `build/allure-results` |
 
 ## Написание тестов
 
-### Создание новых тестов
-
-1. Создайте новый класс тестов в пакете `tests`
-2. Унаследуйтесь от `TestBase` для доступа к базовым настройкам
-3. Используйте инъекцию `api` из `TestBase` для доступа к API-клиентам
+### Новый тест
 
 ```java
-public class NewFeatureTests extends TestBase {
+class NewFeatureTests extends TestBase {
 
     @Test
     @Description("Описание теста")
     void testScenario() {
-        // Используйте api.auth, api.users, api.clubs для вызова API
-        SuccessfulLoginResponseModel response = api.auth.login(loginData);
+        SuccessfulLoginResponseModel response =
+                api.auth.login(new LoginBodyModel("user", "pass"));
 
-        // Проверки с использованием AssertJ
         assertThat(response.access()).startsWith("eyJ");
     }
 }
 ```
 
-### Создание новых моделей
-
-Используйте record для создания моделей данных:
+### Новая модель
 
 ```java
 public record NewModel(String field1, Integer field2) {}
 ```
 
-### Создание спецификаций
-
-Создайте новую спецификацию в пакете `specs`:
+### Новая спецификация
 
 ```java
 public class NewSpec {
     public static RequestSpecification newRequestSpec = baseRequestSpec;
 
     public static ResponseSpecification successfulResponseSpec =
-        new ResponseSpecBuilder()
-            .log(ALL)
-            .expectStatusCode(200)
-            .expectBody(matchesJsonSchemaInClasspath("schemas/new/response_schema.json"))
-            .build();
+            new ResponseSpecBuilder()
+                    .log(ALL)
+                    .expectStatusCode(200)
+                    .expectBody(matchesJsonSchemaInClasspath("schemas/new/response_schema.json"))
+                    .build();
 }
 ```
 
-## Лучшие практики
+### Конвенции
 
-1. **Именование тестов:** Используйте описательные имена, отражающие суть теста
-2. **Организация тестов:** Группируйте тесты по функциональности в отдельные классы
-3. **Покрытие:** Обеспечьте покрытие позитивных, негативных и граничных сценариев
-4. **Независимость:** Тесты должны быть независимыми и не зависеть от порядка выполнения
-5. **Чистота:** Используйте `@BeforeEach` и `@AfterEach` для подготовки и очистки данных
-
-## Поддержка и вклад
-
-Если у вас есть предложения по улучшению проекта или вы нашли баг, пожалуйста, создайте issue в репозитории.
-
-Для внесения изменений:
-
-1. Создайте fork репозитория
-2. Создайте новую ветку (`git checkout -b feature/new-feature`)
-3. Внесите изменения
-4. Сделайте коммит (`git commit -am 'Add new feature'`)
-5. Запушьте изменения (`git push origin feature/new-feature`)
-6. Создайте pull request
+- Модели — только records, без Lombok
+- Импорты — только явные, без `import foo.*` (Spotless блокирует билд)
+- Все запросы к API — через клиенты, не через `given()` напрямую
+- Авторизация — через `UserSpec.authRequestSpec(token)`, не через ручной header
+- Одноразовые body-объекты передаются инлайн: `api.auth.login(new LoginBodyModel(...))`
