@@ -36,9 +36,7 @@ public class UsersApiClient {
     }
 
     public UserModel getCurrentUser(String token) {
-        return given().baseUri("https://book-club.qa.guru")
-                .basePath("/api/v1")
-                .header("Authorization", "Bearer " + token)
+        return given().header("Authorization", "Bearer " + token)
                 .relaxedHTTPSValidation()
                 .when()
                 .get("/users/me/")
@@ -49,9 +47,7 @@ public class UsersApiClient {
     }
 
     public UserModel updateCurrentUser(String token, UpdateUserModel body) {
-        return given().baseUri("https://book-club.qa.guru")
-                .basePath("/api/v1")
-                .header("Authorization", "Bearer " + token)
+        return given().header("Authorization", "Bearer " + token)
                 .contentType("application/json")
                 .relaxedHTTPSValidation()
                 .body(body)
@@ -64,9 +60,7 @@ public class UsersApiClient {
     }
 
     public UserModel patchCurrentUser(String token, UpdateUserModel body) {
-        return given().baseUri("https://book-club.qa.guru")
-                .basePath("/api/v1")
-                .header("Authorization", "Bearer " + token)
+        return given().header("Authorization", "Bearer " + token)
                 .contentType("application/json")
                 .relaxedHTTPSValidation()
                 .body(body)
