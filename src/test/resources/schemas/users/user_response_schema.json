@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "User response",
+  "type": "object",
+  "properties": {
+    "id": { "type": "integer" },
+    "username": { "type": "string" },
+    "firstName": { "type": ["string", "null"] },
+    "lastName": { "type": ["string", "null"] },
+    "email": { "type": ["string", "null"] },
+    "remoteAddr": { "type": ["string", "null"] }
+  },
+  "required": ["id", "username", "firstName", "lastName", "email", "remoteAddr"]
+}

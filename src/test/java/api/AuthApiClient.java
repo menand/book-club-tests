@@ -6,13 +6,16 @@ import static specs.login.LoginSpec.methodNotAllowResponseSpec;
 import static specs.login.LoginSpec.successfulLoginResponseSpec;
 import static specs.login.LoginSpec.validationErrorResponseSpec;
 import static specs.login.LoginSpec.wrongCredentialsLoginResponseSpec;
+import static specs.logout.LogoutSpec.badRequestLogoutResponseSpec;
 import static specs.logout.LogoutSpec.logoutRequestSpec;
 import static specs.logout.LogoutSpec.successfulLogoutResponseSpec;
+import static specs.logout.LogoutSpec.tokenBlacklistResponseSpec;
+import static specs.logout.LogoutSpec.unauthorizedLogoutResponseSpec;
 
 import io.qameta.allure.Step;
+import models.ValidationErrorResponseModel;
 import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
-import models.login.ValidationErrorResponseModel;
 import models.login.WrongCredentialsLoginResponseModel;
 import models.logout.LogoutBodyModel;
 
@@ -82,6 +85,33 @@ public class AuthApiClient {
                 .post("/auth/logout/")
                 .then()
                 .spec(successfulLogoutResponseSpec);
+    }
+
+    public void logoutWithInvalidToken(LogoutBodyModel logoutBody) {
+        given(logoutRequestSpec)
+                .body(logoutBody)
+                .when()
+                .post("/auth/logout/")
+                .then()
+                .spec(unauthorizedLogoutResponseSpec);
+    }
+
+    public void logoutWithBlacklistedToken(LogoutBodyModel logoutBody) {
+        given(logoutRequestSpec)
+                .body(logoutBody)
+                .when()
+                .post("/auth/logout/")
+                .then()
+                .spec(tokenBlacklistResponseSpec);
+    }
+
+    public void logoutWithBadRequest(LogoutBodyModel logoutBody) {
+        given(logoutRequestSpec)
+                .body(logoutBody)
+                .when()
+                .post("/auth/logout/")
+                .then()
+                .spec(badRequestLogoutResponseSpec);
     }
 
     @Step("Попытка входа в систему с использованием метода DELETE")

@@ -1,9 +1,9 @@
 package tests;
 
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Description;
+import java.util.UUID;
 import models.login.LoginBodyModel;
 import models.registration.RegistrationBodyModel;
 import models.users.UpdateUserModel;
@@ -18,14 +18,12 @@ class UpdateUserTests extends TestBase {
 
     @BeforeEach
     void initUser() {
-        testUsername = "user_" + System.currentTimeMillis();
-        String testPassword = "pass_" + System.currentTimeMillis();
+        String uid = UUID.randomUUID().toString().substring(0, 8);
+        testUsername = "user_" + uid;
+        String testPassword = "pass_" + uid;
 
-        RegistrationBodyModel regData = new RegistrationBodyModel(testUsername, testPassword);
-        api.users.register(regData);
-
-        LoginBodyModel loginData = new LoginBodyModel(testUsername, testPassword);
-        token = api.auth.loginAndGetAccessToken(loginData);
+        api.users.register(new RegistrationBodyModel(testUsername, testPassword));
+        token = api.auth.loginAndGetAccessToken(new LoginBodyModel(testUsername, testPassword));
     }
 
     @Test
@@ -33,42 +31,37 @@ class UpdateUserTests extends TestBase {
     void getCurrentUserReturnsUserData() {
         UserModel user = api.users.getCurrentUser(token);
 
-        assertThat(user).isNotNull();
-        assertThat(user.getId()).isGreaterThan(0);
-        assertThat(user.getUsername()).isEqualTo(testUsername);
+        assertThat(user.id()).isGreaterThan(0);
+        assertThat(user.username()).isEqualTo(testUsername);
     }
 
     @Test
     @Description("Обновление пользователя через PUT")
     void updateUserWithPut() {
-        UpdateUserModel updateData =
-                new UpdateUserModel(testUsername, "Ivan", "Ivanov", "ivan@test.com");
+        UserModel updated =
+                api.users.updateCurrentUser(
+                        token,
+                        new UpdateUserModel(testUsername, "Ivan", "Ivanov", "ivan@test.com"));
 
-        UserModel updated = api.users.updateCurrentUser(token, updateData);
-
-        assertThat(updated.getFirstName()).isEqualTo("Ivan");
-        assertThat(updated.getLastName()).isEqualTo("Ivanov");
-        assertThat(updated.getEmail()).isEqualTo("ivan@test.com");
+        assertThat(updated.firstName()).isEqualTo("Ivan");
+        assertThat(updated.lastName()).isEqualTo("Ivanov");
+        assertThat(updated.email()).isEqualTo("ivan@test.com");
     }
 
     @Test
     @Description("Частичное обновление пользователя через PATCH")
     void updateUserWithPatch() {
-        UpdateUserModel patchData = new UpdateUserModel(null, "Petr", "Petrov", null);
+        UserModel updated =
+                api.users.patchCurrentUser(
+                        token, new UpdateUserModel(null, "Petr", "Petrov", null));
 
-        UserModel updated = api.users.patchCurrentUser(token, patchData);
-
-        assertThat(updated.getFirstName()).isEqualTo("Petr");
-        assertThat(updated.getLastName()).isEqualTo("Petrov");
+        assertThat(updated.firstName()).isEqualTo("Petr");
+        assertThat(updated.lastName()).isEqualTo("Petrov");
     }
 
     @Test
     @Description("Доступ без токена должен вернуть 401")
     void unauthorizedAccessReturns401() {
-        given().spec(specs.BaseSpec.baseRequestSpec)
-                .when()
-                .get("/users/me/")
-                .then()
-                .statusCode(401);
+        api.users.getCurrentUserUnauthorized();
     }
 }

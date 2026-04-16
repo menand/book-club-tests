@@ -80,7 +80,6 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 }
 tasks.test {
-    // Пробрасываем нужные системные свойства в тесты
     systemProperties = [
             "allure.results.directory" : file("${buildDir}/allure-results").absolutePath
     ]
@@ -92,6 +91,8 @@ tasks.test {
             includeTags(tagList as String[])
         }
     }
+
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
 
     dependsOn(tasks.spotlessApply)
 
@@ -131,6 +132,12 @@ spotless {
         removeUnusedImports()
         formatAnnotations()
         endWithNewline()
+        custom 'No wildcard imports', {
+            if (it =~ /(?m)^import\s+(?:static\s+)?[a-zA-Z0-9_.]+\.\*;/) {
+                throw new AssertionError("Wildcard imports are not allowed. Expand them into explicit imports.")
+            }
+            it
+        }
         custom 'Step one line', {
             it.replaceAll(/step\(\s+"/, 'step("')
         }

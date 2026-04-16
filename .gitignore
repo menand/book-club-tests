@@ -3,6 +3,8 @@ build/
 gradle/
 !**/src/main/**
 !**/src/test/**
+bin/
+.settings/
 
 ### IntelliJ IDEA ###
 .idea
@@ -12,6 +14,12 @@ gradle/
 
 ### Gradle ###
 .gradle
+.classpath
+.project
+AGENTS.md
+gradlew
+gradlew.bat
+opencode.json
 
 ### Logs ###
 *.log

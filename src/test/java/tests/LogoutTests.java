@@ -1,8 +1,5 @@
 package tests;
 
-import static io.restassured.RestAssured.given;
-import static specs.BaseSpec.baseRequestSpec;
-import static specs.logout.LogoutSpec.*;
 import static tests.TestData.LOGIN_PASSWORD;
 import static tests.TestData.LOGIN_USERNAME;
 
@@ -16,11 +13,10 @@ class LogoutTests extends TestBase {
     @Test
     @Description("Проверка успешного выхода из системы с валидным refresh token")
     void successfulLogoutTest() {
-        LoginBodyModel loginData = new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD);
-        String refreshToken = api.auth.loginAndGetRefreshToken(loginData);
-
-        LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-        api.auth.logout(logoutData);
+        api.auth.logout(
+                new LogoutBodyModel(
+                        api.auth.loginAndGetRefreshToken(
+                                new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD))));
     }
 
     @Test
@@ -28,33 +24,17 @@ class LogoutTests extends TestBase {
             "Попытка выхода с невалидным refresh token (например, изменённый или случайный) —"
                     + " ожидается 401 Unauthorized")
     void logoutWithInvalidRefreshTokenTest() {
-        LoginBodyModel loginData = new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD);
-        String refreshToken = api.auth.loginAndGetRefreshToken(loginData);
+        String refreshToken =
+                api.auth.loginAndGetRefreshToken(
+                        new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD));
 
-        // Модифицируем токен, чтобы сделать его невалидным
-        String invalidRefreshToken = refreshToken + "a";
-
-        LogoutBodyModel logoutData = new LogoutBodyModel(invalidRefreshToken);
-        given().spec(baseRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("/auth/logout/")
-                .then()
-                .log()
-                .all()
-                .spec(unauthorizedLogoutResponseSpec);
+        api.auth.logoutWithInvalidToken(new LogoutBodyModel(refreshToken + "a"));
     }
 
     @Test
     @Description("Попытка выхода с пустым refresh token — ожидается 400 Bad Request")
     void logoutWithEmptyRefreshTokenTest() {
-        LogoutBodyModel logoutData = new LogoutBodyModel("");
-        given().spec(baseRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("/auth/logout/")
-                .then()
-                .spec(badRequestLogoutResponseSpec);
+        api.auth.logoutWithBadRequest(new LogoutBodyModel(""));
     }
 
     @Test
@@ -62,28 +42,18 @@ class LogoutTests extends TestBase {
             "Попытка выхода с уже использованным refresh token (повторный logout) — ожидается 401"
                     + " Unauthorized")
     void logoutWithUsedRefreshTokenTest() {
-        LoginBodyModel loginData = new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD);
-        String refreshToken = api.auth.loginAndGetRefreshToken(loginData);
+        String refreshToken =
+                api.auth.loginAndGetRefreshToken(
+                        new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD));
 
-        LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-        api.auth.logout(logoutData);
-        given().spec(baseRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("/auth/logout/")
-                .then()
-                .spec(tokenBlacklistResponseSpec);
+        LogoutBodyModel logoutBody = new LogoutBodyModel(refreshToken);
+        api.auth.logout(logoutBody);
+        api.auth.logoutWithBlacklistedToken(logoutBody);
     }
 
     @Test
     @Description("Попытка выхода без токена (null) — ожидается 400 Bad Request")
     void logoutWithNullRefreshTokenTest() {
-        LogoutBodyModel logoutData = new LogoutBodyModel(null);
-        given().spec(baseRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("/auth/logout/")
-                .then()
-                .spec(badRequestLogoutResponseSpec);
+        api.auth.logoutWithBadRequest(new LogoutBodyModel(null));
     }
 }

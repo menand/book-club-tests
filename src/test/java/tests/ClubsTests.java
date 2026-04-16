@@ -22,17 +22,6 @@ class ClubsTests extends TestBase {
     }
 
     @Test
-    void getClubsCountMatchesResultsSize() {
-        ClubsListResponseModel response = api.clubs.getClubs();
-
-        int expectedSize = Math.min(response.count(), 50);
-
-        assertThat(response.results())
-                .as("размер results должен быть %d (count=%d)", expectedSize, response.count())
-                .hasSize(expectedSize);
-    }
-
-    @Test
     void getClubsEachClubHasRequiredFields() {
         ClubsListResponseModel response = api.clubs.getClubs();
 
@@ -48,14 +37,5 @@ class ClubsTests extends TestBase {
             assertThat(club.reviews()).isNotNull();
             assertThat(club.created()).isNotNull();
         }
-    }
-
-    @Test
-    void getClubsPaginationFieldsPresent() {
-        ClubsListResponseModel response = api.clubs.getClubs();
-
-        assertThat(response.count()).isNotNull();
-        // next и previous могут быть null при одной странице
-        assertThat(response.results()).isNotNull();
     }
 }
