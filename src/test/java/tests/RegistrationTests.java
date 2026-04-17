@@ -1,5 +1,6 @@
 package tests;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -87,13 +88,16 @@ class RegistrationTests extends TestBase {
     @Test
     @Description("Отправка POST-запроса с методом GET — ожидается 405 Method Not Allowed")
     void registrationWithGetMethodNotAllowedTest() {
-        given(baseRequestSpec)
-                .body(new RegistrationBodyModel(username, password))
-                .when()
-                .get("/users/register/")
-                .then()
-                .spec(methodNotAllowedResponseSpec)
-                .header("Allow", containsString("POST"));
+        step("GET-запрос к /users/register/ — ожидается 405",
+                () -> {
+                    given(baseRequestSpec)
+                            .body(new RegistrationBodyModel(username, password))
+                            .when()
+                            .get("/users/register/")
+                            .then()
+                            .spec(methodNotAllowedResponseSpec)
+                            .header("Allow", containsString("POST"));
+                });
     }
 
     @Test
@@ -101,18 +105,21 @@ class RegistrationTests extends TestBase {
             "Отправка данных в неподдерживаемом формате (application/xml) — ожидается 415"
                     + " Unsupported Media Type")
     void registrationWithUnsupportedMediaTypeTest() {
-        given(baseRequestSpec)
-                .contentType("application/xml")
-                .body(
-                        "<user><username>"
-                                + username
-                                + "</username><password>"
-                                + password
-                                + "</password></user>")
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(unsupportedMediaTypeResponseSpec);
+        step("POST XML в /users/register/ — ожидается 415",
+                () -> {
+                    given(baseRequestSpec)
+                            .contentType("application/xml")
+                            .body(
+                                    "<user><username>"
+                                            + username
+                                            + "</username><password>"
+                                            + password
+                                            + "</password></user>")
+                            .when()
+                            .post("/users/register/")
+                            .then()
+                            .spec(unsupportedMediaTypeResponseSpec);
+                });
     }
 
     @Test
@@ -120,11 +127,14 @@ class RegistrationTests extends TestBase {
             "Отправка данных без обязательных полей (username и password) — ожидается 400 Bad"
                     + " Request")
     void registrationWithMissingRequiredFieldsTest() {
-        given(baseRequestSpec)
-                .body("{}")
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(badRequestResponseSpec);
+        step("POST {} в /users/register/ — ожидается 400",
+                () -> {
+                    given(baseRequestSpec)
+                            .body("{}")
+                            .when()
+                            .post("/users/register/")
+                            .then()
+                            .spec(badRequestResponseSpec);
+                });
     }
 }
