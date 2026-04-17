@@ -10,6 +10,7 @@ import static specs.users.UserSpec.authRequestSpec;
 import static specs.users.UserSpec.successfulUserResponseSpec;
 import static specs.users.UserSpec.unauthorizedResponseSpec;
 
+import io.qameta.allure.Step;
 import models.ValidationErrorResponseModel;
 import models.registration.ExistingUserResponseModel;
 import models.registration.RegistrationBodyModel;
@@ -19,6 +20,7 @@ import models.users.UserModel;
 
 public class UsersApiClient {
 
+    @Step("Регистрация POST /users/register/")
     public SuccessfulRegistrationResponseModel register(RegistrationBodyModel body) {
         return given(registrationRequestSpec)
                 .body(body)
@@ -30,6 +32,7 @@ public class UsersApiClient {
                 .as(SuccessfulRegistrationResponseModel.class);
     }
 
+    @Step("Регистрация уже существующего пользователя")
     public ExistingUserResponseModel registerExistingUser(RegistrationBodyModel body) {
         return given(registrationRequestSpec)
                 .body(body)
@@ -41,6 +44,7 @@ public class UsersApiClient {
                 .as(ExistingUserResponseModel.class);
     }
 
+    @Step("Регистрация с ошибкой валидации")
     public ValidationErrorResponseModel registerWithValidationError(RegistrationBodyModel body) {
         return given(registrationRequestSpec)
                 .body(body)
@@ -52,6 +56,7 @@ public class UsersApiClient {
                 .as(ValidationErrorResponseModel.class);
     }
 
+    @Step("Получение данных текущего пользователя GET /users/me/")
     public UserModel getCurrentUser(String token) {
         return given(authRequestSpec(token))
                 .when()
@@ -62,6 +67,7 @@ public class UsersApiClient {
                 .as(UserModel.class);
     }
 
+    @Step("Обновление пользователя PUT /users/me/")
     public UserModel updateCurrentUser(String token, UpdateUserModel body) {
         return given(authRequestSpec(token))
                 .body(body)
@@ -73,6 +79,7 @@ public class UsersApiClient {
                 .as(UserModel.class);
     }
 
+    @Step("Частичное обновление пользователя PATCH /users/me/")
     public UserModel patchCurrentUser(String token, UpdateUserModel body) {
         return given(authRequestSpec(token))
                 .body(body)
@@ -84,6 +91,7 @@ public class UsersApiClient {
                 .as(UserModel.class);
     }
 
+    @Step("Получение данных пользователя без авторизации")
     public void getCurrentUserUnauthorized() {
         given(baseRequestSpec).when().get("/users/me/").then().spec(unauthorizedResponseSpec);
     }

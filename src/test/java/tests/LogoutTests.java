@@ -6,11 +6,15 @@ import static tests.TestData.LOGIN_USERNAME;
 import io.qameta.allure.Description;
 import models.login.LoginBodyModel;
 import models.logout.LogoutBodyModel;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("LOGOUT")
+@Tag("REGRESS")
 class LogoutTests extends TestBase {
 
     @Test
+    @Tag("SMOKE")
     @Description("Проверка успешного выхода из системы с валидным refresh token")
     void successfulLogoutTest() {
         api.auth.logout(

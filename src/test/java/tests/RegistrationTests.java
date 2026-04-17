@@ -17,8 +17,11 @@ import models.registration.ExistingUserResponseModel;
 import models.registration.RegistrationBodyModel;
 import models.registration.SuccessfulRegistrationResponseModel;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("REGISTRATION")
+@Tag("REGRESS")
 class RegistrationTests extends TestBase {
 
     String username;
@@ -32,6 +35,7 @@ class RegistrationTests extends TestBase {
     }
 
     @Test
+    @Tag("SMOKE")
     @Description("Проверка успешной регистрации нового пользователя")
     void successfulRegistrationTest() {
         SuccessfulRegistrationResponseModel registrationResponse =

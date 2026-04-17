@@ -9,8 +9,11 @@ import models.registration.RegistrationBodyModel;
 import models.users.UpdateUserModel;
 import models.users.UserModel;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("USER")
+@Tag("REGRESS")
 class UpdateUserTests extends TestBase {
 
     private String token;
@@ -27,6 +30,7 @@ class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @Tag("SMOKE")
     @Description("Получение данных текущего пользователя")
     void getCurrentUserReturnsUserData() {
         UserModel user = api.users.getCurrentUser(token);
@@ -36,6 +40,7 @@ class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @Tag("SMOKE")
     @Description("Обновление пользователя через PUT")
     void updateUserWithPut() {
         UserModel updated =
@@ -49,6 +54,7 @@ class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @Tag("SMOKE")
     @Description("Частичное обновление пользователя через PATCH")
     void updateUserWithPatch() {
         UserModel updated =

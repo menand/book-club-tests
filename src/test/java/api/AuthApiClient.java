@@ -21,6 +21,7 @@ import models.logout.LogoutBodyModel;
 
 public class AuthApiClient {
 
+    @Step("Авторизация POST /auth/token/")
     public SuccessfulLoginResponseModel login(LoginBodyModel loginBody) {
         return given(loginRequestSpec)
                 .body(loginBody)
@@ -44,6 +45,7 @@ public class AuthApiClient {
                 .path("refresh");
     }
 
+    @Step("Авторизация и получение access-токена")
     public String loginAndGetAccessToken(LoginBodyModel loginBody) {
         return given(loginRequestSpec)
                 .body(loginBody)
@@ -55,6 +57,7 @@ public class AuthApiClient {
                 .path("access");
     }
 
+    @Step("Авторизация с неверными учётными данными")
     public WrongCredentialsLoginResponseModel loginWrongCredentials(LoginBodyModel loginBody) {
         return given(loginRequestSpec)
                 .body(loginBody)
@@ -66,6 +69,7 @@ public class AuthApiClient {
                 .as(WrongCredentialsLoginResponseModel.class);
     }
 
+    @Step("Авторизация с ошибкой валидации")
     public ValidationErrorResponseModel loginWithValidationError(LoginBodyModel loginBody) {
         return given(loginRequestSpec)
                 .body(loginBody)
@@ -87,6 +91,7 @@ public class AuthApiClient {
                 .spec(successfulLogoutResponseSpec);
     }
 
+    @Step("Logout с невалидным refresh-токеном")
     public void logoutWithInvalidToken(LogoutBodyModel logoutBody) {
         given(logoutRequestSpec)
                 .body(logoutBody)
@@ -96,6 +101,7 @@ public class AuthApiClient {
                 .spec(unauthorizedLogoutResponseSpec);
     }
 
+    @Step("Logout с заблокированным refresh-токеном")
     public void logoutWithBlacklistedToken(LogoutBodyModel logoutBody) {
         given(logoutRequestSpec)
                 .body(logoutBody)
@@ -105,6 +111,7 @@ public class AuthApiClient {
                 .spec(tokenBlacklistResponseSpec);
     }
 
+    @Step("Logout с некорректным телом запроса")
     public void logoutWithBadRequest(LogoutBodyModel logoutBody) {
         given(logoutRequestSpec)
                 .body(logoutBody)

@@ -12,11 +12,15 @@ import models.ValidationErrorResponseModel;
 import models.login.LoginBodyModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.login.WrongCredentialsLoginResponseModel;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("LOGIN")
+@Tag("REGRESS")
 class LoginTests extends TestBase {
 
     @Test
+    @Tag("SMOKE")
     @Description("Успешный вход в систему с валидными учетными данными")
     void successfulLoginTest() {
         SuccessfulLoginResponseModel loginResponse =
