@@ -28,4 +28,7 @@ public class UserSpec {
 
     public static ResponseSpecification unauthorizedResponseSpec =
             new ResponseSpecBuilder().log(ALL).expectStatusCode(401).build();
+
+    public static ResponseSpecification userNoContentResponseSpec =
+            new ResponseSpecBuilder().log(ALL).expectStatusCode(204).build();
 }

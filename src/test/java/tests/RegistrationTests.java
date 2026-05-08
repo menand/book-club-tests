@@ -1,22 +1,17 @@
 package tests;
 
-import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static specs.BaseSpec.baseRequestSpec;
-import static specs.registration.RegistrationSpec.badRequestResponseSpec;
-import static specs.registration.RegistrationSpec.methodNotAllowedResponseSpec;
-import static specs.registration.RegistrationSpec.unsupportedMediaTypeResponseSpec;
 import static tests.TestData.REGISTRATION_EXISTING_USER_ERROR;
 import static tests.TestData.REGISTRATION_IP_REGEXP;
 
 import io.qameta.allure.Description;
 import java.util.UUID;
 import models.ValidationErrorResponseModel;
+import models.login.LoginBodyModel;
 import models.registration.ExistingUserResponseModel;
 import models.registration.RegistrationBodyModel;
 import models.registration.SuccessfulRegistrationResponseModel;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,12 +22,22 @@ class RegistrationTests extends TestBase {
 
     String username;
     String password;
+    boolean userCreated;
 
     @BeforeEach
     void prepareTestData() {
         String uid = UUID.randomUUID().toString().substring(0, 8);
         username = "user_" + uid;
         password = "pass_" + uid;
+        userCreated = false;
+    }
+
+    @AfterEach
+    void cleanupUser() {
+        if (userCreated) {
+            String token = api.auth.loginAndGetAccessToken(new LoginBodyModel(username, password));
+            api.users.deleteCurrentUser(token);
+        }
     }
 
     @Test
@@ -41,6 +46,7 @@ class RegistrationTests extends TestBase {
     void successfulRegistrationTest() {
         SuccessfulRegistrationResponseModel registrationResponse =
                 api.users.register(new RegistrationBodyModel(username, password));
+        userCreated = true;
 
         assertThat(registrationResponse.id()).isGreaterThan(0);
         assertThat(registrationResponse.username()).isEqualTo(username);
@@ -56,6 +62,7 @@ class RegistrationTests extends TestBase {
         RegistrationBodyModel regBody = new RegistrationBodyModel(username, password);
 
         SuccessfulRegistrationResponseModel firstResponse = api.users.register(regBody);
+        userCreated = true;
         assertThat(firstResponse.username()).isEqualTo(username);
 
         ExistingUserResponseModel secondResponse = api.users.registerExistingUser(regBody);
@@ -88,16 +95,7 @@ class RegistrationTests extends TestBase {
     @Test
     @Description("Отправка POST-запроса с методом GET — ожидается 405 Method Not Allowed")
     void registrationWithGetMethodNotAllowedTest() {
-        step("GET-запрос к /users/register/ — ожидается 405",
-                () -> {
-                    given(baseRequestSpec)
-                            .body(new RegistrationBodyModel(username, password))
-                            .when()
-                            .get("/users/register/")
-                            .then()
-                            .spec(methodNotAllowedResponseSpec)
-                            .header("Allow", containsString("POST"));
-                });
+        api.users.registerWithGetMethod(new RegistrationBodyModel(username, password));
     }
 
     @Test
@@ -105,21 +103,14 @@ class RegistrationTests extends TestBase {
             "Отправка данных в неподдерживаемом формате (application/xml) — ожидается 415"
                     + " Unsupported Media Type")
     void registrationWithUnsupportedMediaTypeTest() {
-        step("POST XML в /users/register/ — ожидается 415",
-                () -> {
-                    given(baseRequestSpec)
-                            .contentType("application/xml")
-                            .body(
-                                    "<user><username>"
-                                            + username
-                                            + "</username><password>"
-                                            + password
-                                            + "</password></user>")
-                            .when()
-                            .post("/users/register/")
-                            .then()
-                            .spec(unsupportedMediaTypeResponseSpec);
-                });
+        String xmlBody =
+                "<user><username>"
+                        + username
+                        + "</username><password>"
+                        + password
+                        + "</password></user>";
+
+        api.users.registerWithXmlContentType(xmlBody);
     }
 
     @Test
@@ -127,14 +118,6 @@ class RegistrationTests extends TestBase {
             "Отправка данных без обязательных полей (username и password) — ожидается 400 Bad"
                     + " Request")
     void registrationWithMissingRequiredFieldsTest() {
-        step("POST {} в /users/register/ — ожидается 400",
-                () -> {
-                    given(baseRequestSpec)
-                            .body("{}")
-                            .when()
-                            .post("/users/register/")
-                            .then()
-                            .spec(badRequestResponseSpec);
-                });
+        api.users.registerWithEmptyBody();
     }
 }

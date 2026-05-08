@@ -5,6 +5,7 @@ import java.util.UUID;
 import models.login.LoginBodyModel;
 import models.logout.LogoutBodyModel;
 import models.registration.RegistrationBodyModel;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,15 @@ class LogoutTests extends TestBase {
 
         api.users.register(new RegistrationBodyModel(testUsername, testPassword));
         credentials = new LoginBodyModel(testUsername, testPassword);
+    }
+
+    @AfterEach
+    void cleanupUser() {
+        if (credentials == null) {
+            return;
+        }
+        String token = api.auth.loginAndGetAccessToken(credentials);
+        api.users.deleteCurrentUser(token);
     }
 
     @Test

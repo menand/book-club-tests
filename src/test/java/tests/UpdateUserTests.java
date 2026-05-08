@@ -8,6 +8,7 @@ import models.login.LoginBodyModel;
 import models.registration.RegistrationBodyModel;
 import models.users.UpdateUserModel;
 import models.users.UserModel;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,11 @@ class UpdateUserTests extends TestBase {
 
         api.users.register(new RegistrationBodyModel(testUsername, testPassword));
         token = api.auth.loginAndGetAccessToken(new LoginBodyModel(testUsername, testPassword));
+    }
+
+    @AfterEach
+    void cleanupUser() {
+        api.users.deleteCurrentUser(token);
     }
 
     @Test

@@ -25,4 +25,66 @@ public class ClubsSpec {
                     .expectBody("count", greaterThanOrEqualTo(0))
                     .expectBody("results", notNullValue())
                     .build();
+
+    public static ResponseSpecification successfulClubResponseSpec =
+            new ResponseSpecBuilder()
+                    .log(ALL)
+                    .expectStatusCode(200)
+                    .expectBody(
+                            matchesJsonSchemaInClasspath("schemas/clubs/club_response_schema.json"))
+                    .expectBody("id", notNullValue())
+                    .expectBody("bookTitle", notNullValue())
+                    .build();
+
+    public static ResponseSpecification createdClubResponseSpec =
+            new ResponseSpecBuilder()
+                    .log(ALL)
+                    .expectStatusCode(201)
+                    .expectBody(
+                            matchesJsonSchemaInClasspath("schemas/clubs/club_response_schema.json"))
+                    .expectBody("id", notNullValue())
+                    .expectBody("bookTitle", notNullValue())
+                    .build();
+
+    public static ResponseSpecification clubNoContentResponseSpec =
+            new ResponseSpecBuilder().log(ALL).expectStatusCode(204).build();
+
+    public static ResponseSpecification clubNotFoundResponseSpec =
+            new ResponseSpecBuilder().log(ALL).expectStatusCode(404).build();
+
+    public static ResponseSpecification clubUnauthorizedResponseSpec =
+            new ResponseSpecBuilder().log(ALL).expectStatusCode(401).build();
+
+    public static ResponseSpecification successfulReviewResponseSpec =
+            new ResponseSpecBuilder()
+                    .log(ALL)
+                    .expectStatusCode(200)
+                    .expectBody(
+                            matchesJsonSchemaInClasspath(
+                                    "schemas/clubs/review_response_schema.json"))
+                    .expectBody("id", notNullValue())
+                    .expectBody("club", notNullValue())
+                    .build();
+
+    public static ResponseSpecification createdReviewResponseSpec =
+            new ResponseSpecBuilder()
+                    .log(ALL)
+                    .expectStatusCode(201)
+                    .expectBody(
+                            matchesJsonSchemaInClasspath(
+                                    "schemas/clubs/review_response_schema.json"))
+                    .expectBody("id", notNullValue())
+                    .expectBody("club", notNullValue())
+                    .build();
+
+    public static ResponseSpecification successfulReviewsListResponseSpec =
+            new ResponseSpecBuilder()
+                    .log(ALL)
+                    .expectStatusCode(200)
+                    .expectBody(
+                            matchesJsonSchemaInClasspath(
+                                    "schemas/clubs/reviews_list_response_schema.json"))
+                    .expectBody("count", notNullValue())
+                    .expectBody("results", notNullValue())
+                    .build();
 }

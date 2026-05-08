@@ -2,6 +2,7 @@ package specs.registration;
 
 import static io.restassured.filter.log.LogDetail.ALL;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 import static specs.BaseSpec.baseRequestSpec;
 
@@ -39,7 +40,11 @@ public class RegistrationSpec {
             new ResponseSpecBuilder().log(ALL).expectStatusCode(400).build();
 
     public static ResponseSpecification methodNotAllowedResponseSpec =
-            new ResponseSpecBuilder().log(ALL).expectStatusCode(405).build();
+            new ResponseSpecBuilder()
+                    .log(ALL)
+                    .expectStatusCode(405)
+                    .expectHeader("Allow", containsString("POST"))
+                    .build();
 
     public static ResponseSpecification unsupportedMediaTypeResponseSpec =
             new ResponseSpecBuilder().log(ALL).expectStatusCode(415).build();

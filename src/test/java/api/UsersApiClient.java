@@ -4,11 +4,14 @@ import static io.restassured.RestAssured.given;
 import static specs.BaseSpec.baseRequestSpec;
 import static specs.registration.RegistrationSpec.badRequestResponseSpec;
 import static specs.registration.RegistrationSpec.existingUserRegistrationResponseSpec;
+import static specs.registration.RegistrationSpec.methodNotAllowedResponseSpec;
 import static specs.registration.RegistrationSpec.registrationRequestSpec;
 import static specs.registration.RegistrationSpec.successfulRegistrationResponseSpec;
+import static specs.registration.RegistrationSpec.unsupportedMediaTypeResponseSpec;
 import static specs.users.UserSpec.authRequestSpec;
 import static specs.users.UserSpec.successfulUserResponseSpec;
 import static specs.users.UserSpec.unauthorizedResponseSpec;
+import static specs.users.UserSpec.userNoContentResponseSpec;
 
 import io.qameta.allure.Step;
 import models.ValidationErrorResponseModel;
@@ -94,5 +97,45 @@ public class UsersApiClient {
     @Step("Получение данных пользователя без авторизации")
     public void getCurrentUserUnauthorized() {
         given(baseRequestSpec).when().get("/users/me/").then().spec(unauthorizedResponseSpec);
+    }
+
+    @Step("Удаление текущего пользователя DELETE /users/me/")
+    public void deleteCurrentUser(String token) {
+        given(authRequestSpec(token))
+                .when()
+                .delete("/users/me/")
+                .then()
+                .spec(userNoContentResponseSpec);
+    }
+
+    @Step("GET /users/register/ — ожидается 405 Method Not Allowed")
+    public void registerWithGetMethod(RegistrationBodyModel body) {
+        given(registrationRequestSpec)
+                .body(body)
+                .when()
+                .get("/users/register/")
+                .then()
+                .spec(methodNotAllowedResponseSpec);
+    }
+
+    @Step("POST /users/register/ с XML — ожидается 415 Unsupported Media Type")
+    public void registerWithXmlContentType(String xmlBody) {
+        given(baseRequestSpec)
+                .contentType("application/xml")
+                .body(xmlBody)
+                .when()
+                .post("/users/register/")
+                .then()
+                .spec(unsupportedMediaTypeResponseSpec);
+    }
+
+    @Step("POST /users/register/ с пустым телом — ожидается 400 Bad Request")
+    public void registerWithEmptyBody() {
+        given(registrationRequestSpec)
+                .body("{}")
+                .when()
+                .post("/users/register/")
+                .then()
+                .spec(badRequestResponseSpec);
     }
 }
