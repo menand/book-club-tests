@@ -1,5 +1,6 @@
 package tests;
 
+import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Description;
@@ -41,8 +42,11 @@ class UpdateUserTests extends TestBase {
     void getCurrentUserReturnsUserData() {
         UserModel user = api.users.getCurrentUser(token);
 
-        assertThat(user.id()).isGreaterThan(0);
-        assertThat(user.username()).isEqualTo(testUsername);
+        step("Проверки",
+                () -> {
+                    assertThat(user.id()).isGreaterThan(0);
+                    assertThat(user.username()).isEqualTo(testUsername);
+                });
     }
 
     @Test
@@ -54,9 +58,12 @@ class UpdateUserTests extends TestBase {
                         token,
                         new UpdateUserModel(testUsername, "Ivan", "Ivanov", "ivan@test.com"));
 
-        assertThat(updated.firstName()).isEqualTo("Ivan");
-        assertThat(updated.lastName()).isEqualTo("Ivanov");
-        assertThat(updated.email()).isEqualTo("ivan@test.com");
+        step("Проверки",
+                () -> {
+                    assertThat(updated.firstName()).isEqualTo("Ivan");
+                    assertThat(updated.lastName()).isEqualTo("Ivanov");
+                    assertThat(updated.email()).isEqualTo("ivan@test.com");
+                });
     }
 
     @Test
@@ -67,8 +74,11 @@ class UpdateUserTests extends TestBase {
                 api.users.patchCurrentUser(
                         token, new UpdateUserModel(null, "Petr", "Petrov", null));
 
-        assertThat(updated.firstName()).isEqualTo("Petr");
-        assertThat(updated.lastName()).isEqualTo("Petrov");
+        step("Проверки",
+                () -> {
+                    assertThat(updated.firstName()).isEqualTo("Petr");
+                    assertThat(updated.lastName()).isEqualTo("Petrov");
+                });
     }
 
     @Test

@@ -1,5 +1,6 @@
 package tests;
 
+import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Description;
@@ -64,7 +65,8 @@ class ClubMembersTests extends TestBase {
         api.clubs.joinClub(memberToken, clubId);
 
         ClubModel club = api.clubs.getClub(memberToken, clubId);
-        assertThat(club.members()).contains(memberId);
+
+        step("Проверки", () -> assertThat(club.members()).contains(memberId));
     }
 
     @Test
@@ -73,13 +75,16 @@ class ClubMembersTests extends TestBase {
     void leaveClub_removesCurrentUserFromMembers() {
         api.clubs.joinClub(memberToken, clubId);
         ClubModel beforeLeave = api.clubs.getClub(memberToken, clubId);
-        assertThat(beforeLeave.members()).contains(memberId);
+        step("Проверка предусловия: member в списке после join",
+                () -> assertThat(beforeLeave.members()).contains(memberId));
 
         api.clubs.leaveClub(memberToken, clubId);
 
         ClubModel afterLeave = api.clubs.getClub(memberToken, clubId);
-        assertThat(afterLeave.members())
-                .doesNotContain(memberId)
-                .hasSize(beforeLeave.members().size() - 1);
+        step("Проверки",
+                () ->
+                        assertThat(afterLeave.members())
+                                .doesNotContain(memberId)
+                                .hasSize(beforeLeave.members().size() - 1));
     }
 }

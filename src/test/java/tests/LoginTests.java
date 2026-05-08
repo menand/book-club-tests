@@ -1,5 +1,6 @@
 package tests;
 
+import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tests.TestData.LOGIN_PASSWORD;
 import static tests.TestData.LOGIN_TOKEN_PREFIX;
@@ -26,9 +27,12 @@ class LoginTests extends TestBase {
         SuccessfulLoginResponseModel loginResponse =
                 api.auth.login(new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD));
 
-        assertThat(loginResponse.access()).startsWith(LOGIN_TOKEN_PREFIX);
-        assertThat(loginResponse.refresh()).startsWith(LOGIN_TOKEN_PREFIX);
-        assertThat(loginResponse.access()).isNotEqualTo(loginResponse.refresh());
+        step("Проверки",
+                () -> {
+                    assertThat(loginResponse.access()).startsWith(LOGIN_TOKEN_PREFIX);
+                    assertThat(loginResponse.refresh()).startsWith(LOGIN_TOKEN_PREFIX);
+                    assertThat(loginResponse.access()).isNotEqualTo(loginResponse.refresh());
+                });
     }
 
     @Test
@@ -38,7 +42,8 @@ class LoginTests extends TestBase {
                 api.auth.loginWrongCredentials(
                         new LoginBodyModel(LOGIN_USERNAME, LOGIN_WRONG_PASSWORD));
 
-        assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR);
+        step("Проверки",
+                () -> assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR));
     }
 
     @Test
@@ -47,8 +52,11 @@ class LoginTests extends TestBase {
         ValidationErrorResponseModel loginResponse =
                 api.auth.loginWithValidationError(new LoginBodyModel("", LOGIN_PASSWORD));
 
-        assertThat(loginResponse.username()).isNotEmpty();
-        assertThat(loginResponse.username().getFirst()).contains("may not be blank");
+        step("Проверки",
+                () -> {
+                    assertThat(loginResponse.username()).isNotEmpty();
+                    assertThat(loginResponse.username().getFirst()).contains("may not be blank");
+                });
     }
 
     @Test
@@ -57,8 +65,11 @@ class LoginTests extends TestBase {
         ValidationErrorResponseModel loginResponse =
                 api.auth.loginWithValidationError(new LoginBodyModel(LOGIN_USERNAME, ""));
 
-        assertThat(loginResponse.password()).isNotEmpty();
-        assertThat(loginResponse.password().getFirst()).contains("may not be blank");
+        step("Проверки",
+                () -> {
+                    assertThat(loginResponse.password()).isNotEmpty();
+                    assertThat(loginResponse.password().getFirst()).contains("may not be blank");
+                });
     }
 
     @Test
@@ -67,8 +78,11 @@ class LoginTests extends TestBase {
         ValidationErrorResponseModel loginResponse =
                 api.auth.loginWithValidationError(new LoginBodyModel(null, LOGIN_PASSWORD));
 
-        assertThat(loginResponse.username()).isNotEmpty();
-        assertThat(loginResponse.username().getFirst()).contains("may not be null");
+        step("Проверки",
+                () -> {
+                    assertThat(loginResponse.username()).isNotEmpty();
+                    assertThat(loginResponse.username().getFirst()).contains("may not be null");
+                });
     }
 
     @Test
@@ -77,8 +91,11 @@ class LoginTests extends TestBase {
         ValidationErrorResponseModel loginResponse =
                 api.auth.loginWithValidationError(new LoginBodyModel(LOGIN_USERNAME, null));
 
-        assertThat(loginResponse.password()).isNotEmpty();
-        assertThat(loginResponse.password().getFirst()).contains("may not be null");
+        step("Проверки",
+                () -> {
+                    assertThat(loginResponse.password()).isNotEmpty();
+                    assertThat(loginResponse.password().getFirst()).contains("may not be null");
+                });
     }
 
     @Test
@@ -87,10 +104,13 @@ class LoginTests extends TestBase {
         ValidationErrorResponseModel loginResponse =
                 api.auth.loginWithValidationError(new LoginBodyModel("", ""));
 
-        assertThat(loginResponse.username()).isNotEmpty();
-        assertThat(loginResponse.username().getFirst()).contains("may not be blank");
-        assertThat(loginResponse.password()).isNotEmpty();
-        assertThat(loginResponse.password().getFirst()).contains("may not be blank");
+        step("Проверки",
+                () -> {
+                    assertThat(loginResponse.username()).isNotEmpty();
+                    assertThat(loginResponse.username().getFirst()).contains("may not be blank");
+                    assertThat(loginResponse.password()).isNotEmpty();
+                    assertThat(loginResponse.password().getFirst()).contains("may not be blank");
+                });
     }
 
     @Test
@@ -100,7 +120,8 @@ class LoginTests extends TestBase {
                 api.auth.loginWrongCredentials(
                         new LoginBodyModel("x".repeat(1000), LOGIN_PASSWORD));
 
-        assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR);
+        step("Проверки",
+                () -> assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR));
     }
 
     @Test
@@ -110,7 +131,8 @@ class LoginTests extends TestBase {
                 api.auth.loginWrongCredentials(
                         new LoginBodyModel(LOGIN_USERNAME, "x".repeat(1000)));
 
-        assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR);
+        step("Проверки",
+                () -> assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR));
     }
 
     @Test
@@ -120,7 +142,8 @@ class LoginTests extends TestBase {
                 api.auth.loginWrongCredentials(
                         new LoginBodyModel("user!@#$%^&*()", LOGIN_PASSWORD));
 
-        assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR);
+        step("Проверки",
+                () -> assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR));
     }
 
     @Test
@@ -130,7 +153,8 @@ class LoginTests extends TestBase {
                 api.auth.loginWrongCredentials(
                         new LoginBodyModel(LOGIN_USERNAME, "pass!@#$%^&*()"));
 
-        assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR);
+        step("Проверки",
+                () -> assertThat(loginResponse.detail()).isEqualTo(LOGIN_WRONG_CREDENTIALS_ERROR));
     }
 
     @Test
@@ -139,6 +163,9 @@ class LoginTests extends TestBase {
         WrongCredentialsLoginResponseModel loginResponse =
                 api.auth.loginWithDeleteMethod(new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD));
 
-        assertThat(loginResponse.detail()).contains("Method \"DELETE\" not allowed.");
+        step("Проверки",
+                () ->
+                        assertThat(loginResponse.detail())
+                                .contains("Method \"DELETE\" not allowed."));
     }
 }

@@ -1,5 +1,6 @@
 package tests;
 
+import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tests.TestData.REGISTRATION_EXISTING_USER_ERROR;
 import static tests.TestData.REGISTRATION_IP_REGEXP;
@@ -48,12 +49,15 @@ class RegistrationTests extends TestBase {
                 api.users.register(new RegistrationBodyModel(username, password));
         userCreated = true;
 
-        assertThat(registrationResponse.id()).isGreaterThan(0);
-        assertThat(registrationResponse.username()).isEqualTo(username);
-        assertThat(registrationResponse.firstName()).isEmpty();
-        assertThat(registrationResponse.lastName()).isEmpty();
-        assertThat(registrationResponse.email()).isEmpty();
-        assertThat(registrationResponse.remoteAddr()).matches(REGISTRATION_IP_REGEXP);
+        step("Проверки",
+                () -> {
+                    assertThat(registrationResponse.id()).isGreaterThan(0);
+                    assertThat(registrationResponse.username()).isEqualTo(username);
+                    assertThat(registrationResponse.firstName()).isEmpty();
+                    assertThat(registrationResponse.lastName()).isEmpty();
+                    assertThat(registrationResponse.email()).isEmpty();
+                    assertThat(registrationResponse.remoteAddr()).matches(REGISTRATION_IP_REGEXP);
+                });
     }
 
     @Test
@@ -63,11 +67,14 @@ class RegistrationTests extends TestBase {
 
         SuccessfulRegistrationResponseModel firstResponse = api.users.register(regBody);
         userCreated = true;
-        assertThat(firstResponse.username()).isEqualTo(username);
-
         ExistingUserResponseModel secondResponse = api.users.registerExistingUser(regBody);
-        assertThat(secondResponse.username().getFirst())
-                .isEqualTo(REGISTRATION_EXISTING_USER_ERROR);
+
+        step("Проверки",
+                () -> {
+                    assertThat(firstResponse.username()).isEqualTo(username);
+                    assertThat(secondResponse.username().getFirst())
+                            .isEqualTo(REGISTRATION_EXISTING_USER_ERROR);
+                });
     }
 
     @Test
@@ -76,8 +83,12 @@ class RegistrationTests extends TestBase {
         ValidationErrorResponseModel response =
                 api.users.registerWithValidationError(new RegistrationBodyModel(username, ""));
 
-        assertThat(response.password()).isNotEmpty();
-        assertThat(response.password().getFirst()).contains("This field may not be blank.");
+        step("Проверки",
+                () -> {
+                    assertThat(response.password()).isNotEmpty();
+                    assertThat(response.password().getFirst())
+                            .contains("This field may not be blank.");
+                });
     }
 
     @Test
@@ -87,9 +98,12 @@ class RegistrationTests extends TestBase {
                 api.users.registerWithValidationError(
                         new RegistrationBodyModel("u".repeat(256), password));
 
-        assertThat(response.username()).isNotEmpty();
-        assertThat(response.username().getFirst())
-                .contains("Ensure this field has no more than 150 characters");
+        step("Проверки",
+                () -> {
+                    assertThat(response.username()).isNotEmpty();
+                    assertThat(response.username().getFirst())
+                            .contains("Ensure this field has no more than 150 characters");
+                });
     }
 
     @Test

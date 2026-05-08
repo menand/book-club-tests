@@ -1,5 +1,6 @@
 package tests;
 
+import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Description;
@@ -52,13 +53,16 @@ class ClubReviewsCrudTests extends TestBase {
 
         UserModel currentUser = api.users.getCurrentUser(token);
 
-        assertThat(created.id()).isPositive();
-        assertThat(created.club()).isEqualTo(clubId);
-        assertThat(created.review()).isEqualTo("Excellent read");
-        assertThat(created.assessment()).isEqualTo(5);
-        assertThat(created.readPages()).isEqualTo(320);
-        assertThat(created.user().id()).isEqualTo(currentUser.id());
-        assertThat(created.user().username()).isEqualTo(currentUser.username());
+        step("Проверки",
+                () -> {
+                    assertThat(created.id()).isPositive();
+                    assertThat(created.club()).isEqualTo(clubId);
+                    assertThat(created.review()).isEqualTo("Excellent read");
+                    assertThat(created.assessment()).isEqualTo(5);
+                    assertThat(created.readPages()).isEqualTo(320);
+                    assertThat(created.user().id()).isEqualTo(currentUser.id());
+                    assertThat(created.user().username()).isEqualTo(currentUser.username());
+                });
     }
 
     @Test
@@ -71,9 +75,12 @@ class ClubReviewsCrudTests extends TestBase {
 
         ClubReviewModel fetched = api.clubs.getReview(token, created.id());
 
-        assertThat(fetched.id()).isEqualTo(created.id());
-        assertThat(fetched.review()).isEqualTo("Good book");
-        assertThat(fetched.assessment()).isEqualTo(4);
+        step("Проверки",
+                () -> {
+                    assertThat(fetched.id()).isEqualTo(created.id());
+                    assertThat(fetched.review()).isEqualTo("Good book");
+                    assertThat(fetched.assessment()).isEqualTo(4);
+                });
     }
 
     @Test
@@ -85,7 +92,11 @@ class ClubReviewsCrudTests extends TestBase {
 
         ReviewsListResponseModel list = api.clubs.getReviews(token);
 
-        assertThat(list.results()).extracting(ClubReviewModel::id).contains(created.id());
+        step("Проверки",
+                () ->
+                        assertThat(list.results())
+                                .extracting(ClubReviewModel::id)
+                                .contains(created.id()));
     }
 
     @Test
@@ -100,9 +111,12 @@ class ClubReviewsCrudTests extends TestBase {
                         created.id(),
                         new CreateReviewBodyModel(clubId, "Replaced text", 5, 500));
 
-        assertThat(updated.review()).isEqualTo("Replaced text");
-        assertThat(updated.assessment()).isEqualTo(5);
-        assertThat(updated.readPages()).isEqualTo(500);
+        step("Проверки",
+                () -> {
+                    assertThat(updated.review()).isEqualTo("Replaced text");
+                    assertThat(updated.assessment()).isEqualTo(5);
+                    assertThat(updated.readPages()).isEqualTo(500);
+                });
     }
 
     @Test
@@ -115,9 +129,12 @@ class ClubReviewsCrudTests extends TestBase {
                 api.clubs.patchReview(
                         token, created.id(), new UpdateReviewBodyModel(null, null, 4, null));
 
-        assertThat(patched.assessment()).isEqualTo(4);
-        assertThat(patched.review()).isEqualTo("Original");
-        assertThat(patched.readPages()).isEqualTo(75);
+        step("Проверки",
+                () -> {
+                    assertThat(patched.assessment()).isEqualTo(4);
+                    assertThat(patched.review()).isEqualTo("Original");
+                    assertThat(patched.readPages()).isEqualTo(75);
+                });
     }
 
     @Test

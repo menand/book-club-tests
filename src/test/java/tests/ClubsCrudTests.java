@@ -1,5 +1,6 @@
 package tests;
 
+import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Description;
@@ -44,15 +45,18 @@ class ClubsCrudTests extends TestBase {
 
         ClubModel created = api.clubs.createClub(token, body);
 
-        assertThat(created.id()).isPositive();
-        assertThat(created.bookTitle()).isEqualTo(body.bookTitle());
-        assertThat(created.bookAuthors()).isEqualTo(body.bookAuthors());
-        assertThat(created.publicationYear()).isEqualTo(body.publicationYear());
-        assertThat(created.description()).isEqualTo(body.description());
-        assertThat(created.telegramChatLink()).isEqualTo(body.telegramChatLink());
-        assertThat(created.owner()).isPositive();
-        assertThat(created.members()).isNotNull();
-        assertThat(created.reviews()).isNotNull();
+        step("Проверки",
+                () -> {
+                    assertThat(created.id()).isPositive();
+                    assertThat(created.bookTitle()).isEqualTo(body.bookTitle());
+                    assertThat(created.bookAuthors()).isEqualTo(body.bookAuthors());
+                    assertThat(created.publicationYear()).isEqualTo(body.publicationYear());
+                    assertThat(created.description()).isEqualTo(body.description());
+                    assertThat(created.telegramChatLink()).isEqualTo(body.telegramChatLink());
+                    assertThat(created.owner()).isPositive();
+                    assertThat(created.members()).isNotNull();
+                    assertThat(created.reviews()).isNotNull();
+                });
     }
 
     @Test
@@ -63,9 +67,12 @@ class ClubsCrudTests extends TestBase {
 
         ClubModel fetched = api.clubs.getClub(token, created.id());
 
-        assertThat(fetched.id()).isEqualTo(created.id());
-        assertThat(fetched.bookTitle()).isEqualTo(created.bookTitle());
-        assertThat(fetched.owner()).isEqualTo(created.owner());
+        step("Проверки",
+                () -> {
+                    assertThat(fetched.id()).isEqualTo(created.id());
+                    assertThat(fetched.bookTitle()).isEqualTo(created.bookTitle());
+                    assertThat(fetched.owner()).isEqualTo(created.owner());
+                });
     }
 
     @Test
@@ -85,12 +92,15 @@ class ClubsCrudTests extends TestBase {
 
         ClubModel updated = api.clubs.updateClub(token, created.id(), updateBody);
 
-        assertThat(updated.id()).isEqualTo(created.id());
-        assertThat(updated.bookTitle()).isEqualTo(updatedTitle);
-        assertThat(updated.bookAuthors()).isEqualTo(updatedAuthor);
-        assertThat(updated.publicationYear()).isEqualTo(1999);
-        assertThat(updated.description()).isEqualTo(updatedDescription);
-        assertThat(updated.telegramChatLink()).isEqualTo(updatedLink);
+        step("Проверки",
+                () -> {
+                    assertThat(updated.id()).isEqualTo(created.id());
+                    assertThat(updated.bookTitle()).isEqualTo(updatedTitle);
+                    assertThat(updated.bookAuthors()).isEqualTo(updatedAuthor);
+                    assertThat(updated.publicationYear()).isEqualTo(1999);
+                    assertThat(updated.description()).isEqualTo(updatedDescription);
+                    assertThat(updated.telegramChatLink()).isEqualTo(updatedLink);
+                });
     }
 
     @Test
@@ -106,11 +116,15 @@ class ClubsCrudTests extends TestBase {
                         created.id(),
                         new UpdateClubBodyModel(null, null, null, "Patched description", null));
 
-        assertThat(patched.description()).isEqualTo("Patched description");
-        assertThat(patched.bookTitle()).isEqualTo(originalBody.bookTitle());
-        assertThat(patched.bookAuthors()).isEqualTo(originalBody.bookAuthors());
-        assertThat(patched.publicationYear()).isEqualTo(originalBody.publicationYear());
-        assertThat(patched.telegramChatLink()).isEqualTo(originalBody.telegramChatLink());
+        step("Проверки",
+                () -> {
+                    assertThat(patched.description()).isEqualTo("Patched description");
+                    assertThat(patched.bookTitle()).isEqualTo(originalBody.bookTitle());
+                    assertThat(patched.bookAuthors()).isEqualTo(originalBody.bookAuthors());
+                    assertThat(patched.publicationYear()).isEqualTo(originalBody.publicationYear());
+                    assertThat(patched.telegramChatLink())
+                            .isEqualTo(originalBody.telegramChatLink());
+                });
     }
 
     @Test
