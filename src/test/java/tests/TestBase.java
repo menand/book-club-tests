@@ -10,7 +10,7 @@ public class TestBase {
 
     @BeforeAll
     static void setUp() {
-        RestAssured.baseURI = "https://book-club.qa.guru";
-        RestAssured.basePath = "/api/v1";
+        RestAssured.baseURI = System.getProperty("api.baseUri", "https://book-club.qa.guru");
+        RestAssured.basePath = System.getProperty("api.basePath", "/api/v1");
     }
 }

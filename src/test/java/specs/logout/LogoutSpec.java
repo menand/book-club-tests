@@ -1,6 +1,8 @@
 package specs.logout;
 
 import static io.restassured.filter.log.LogDetail.ALL;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static specs.BaseSpec.baseRequestSpec;
 
 import io.restassured.builder.ResponseSpecBuilder;
@@ -18,24 +20,20 @@ public class LogoutSpec {
             new ResponseSpecBuilder()
                     .log(ALL)
                     .expectStatusCode(401)
-                    .expectBody("detail", org.hamcrest.Matchers.containsString("Token is invalid"))
+                    .expectBody("detail", containsString("Token is invalid"))
                     .build();
 
     public static ResponseSpecification tokenBlacklistResponseSpec =
             new ResponseSpecBuilder()
                     .log(ALL)
                     .expectStatusCode(401)
-                    .expectBody(
-                            "detail", org.hamcrest.Matchers.containsString("Token is blacklisted"))
+                    .expectBody("detail", containsString("Token is blacklisted"))
                     .build();
 
     public static ResponseSpecification badRequestLogoutResponseSpec =
             new ResponseSpecBuilder()
                     .log(ALL)
                     .expectStatusCode(400)
-                    .expectBody(
-                            "refresh",
-                            org.hamcrest.Matchers.hasItem(
-                                    org.hamcrest.Matchers.containsString("may not")))
+                    .expectBody("refresh", hasItem(containsString("may not")))
                     .build();
 }

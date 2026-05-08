@@ -1,11 +1,11 @@
 package tests;
 
-import static tests.TestData.LOGIN_PASSWORD;
-import static tests.TestData.LOGIN_USERNAME;
-
 import io.qameta.allure.Description;
+import java.util.UUID;
 import models.login.LoginBodyModel;
 import models.logout.LogoutBodyModel;
+import models.registration.RegistrationBodyModel;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -13,14 +13,23 @@ import org.junit.jupiter.api.Test;
 @Tag("REGRESS")
 class LogoutTests extends TestBase {
 
+    private LoginBodyModel credentials;
+
+    @BeforeEach
+    void initUser() {
+        String uid = UUID.randomUUID().toString().substring(0, 8);
+        String testUsername = "user_" + uid;
+        String testPassword = "pass_" + uid;
+
+        api.users.register(new RegistrationBodyModel(testUsername, testPassword));
+        credentials = new LoginBodyModel(testUsername, testPassword);
+    }
+
     @Test
     @Tag("SMOKE")
     @Description("Проверка успешного выхода из системы с валидным refresh token")
     void successfulLogoutTest() {
-        api.auth.logout(
-                new LogoutBodyModel(
-                        api.auth.loginAndGetRefreshToken(
-                                new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD))));
+        api.auth.logout(new LogoutBodyModel(api.auth.loginAndGetRefreshToken(credentials)));
     }
 
     @Test
@@ -28,9 +37,7 @@ class LogoutTests extends TestBase {
             "Попытка выхода с невалидным refresh token (например, изменённый или случайный) —"
                     + " ожидается 401 Unauthorized")
     void logoutWithInvalidRefreshTokenTest() {
-        String refreshToken =
-                api.auth.loginAndGetRefreshToken(
-                        new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD));
+        String refreshToken = api.auth.loginAndGetRefreshToken(credentials);
 
         api.auth.logoutWithInvalidToken(new LogoutBodyModel(refreshToken + "a"));
     }
@@ -46,9 +53,7 @@ class LogoutTests extends TestBase {
             "Попытка выхода с уже использованным refresh token (повторный logout) — ожидается 401"
                     + " Unauthorized")
     void logoutWithUsedRefreshTokenTest() {
-        String refreshToken =
-                api.auth.loginAndGetRefreshToken(
-                        new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD));
+        String refreshToken = api.auth.loginAndGetRefreshToken(credentials);
 
         LogoutBodyModel logoutBody = new LogoutBodyModel(refreshToken);
         api.auth.logout(logoutBody);

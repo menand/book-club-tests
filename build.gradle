@@ -17,7 +17,6 @@ repositories {
 
 ext {
     junitVersion = '6.0.3'
-    lombokVersion = '1.18.44'
     allureVersion = '2.34.0'
     restAssuredVersion = '6.0.0'
 }
@@ -75,14 +74,16 @@ dependencies {
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-    testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 }
 tasks.test {
-    systemProperties = [
-            "allure.results.directory" : file("${buildDir}/allure-results").absolutePath
-    ]
+    systemProperty "allure.results.directory", file("${buildDir}/allure-results").absolutePath
+
+    ["api.baseUri", "api.basePath"].each { key ->
+        def value = System.getProperty(key)
+        if (value != null) {
+            systemProperty(key, value)
+        }
+    }
 
     useJUnitPlatform {
         String tags = System.getProperty("groups")
@@ -93,8 +94,6 @@ tasks.test {
     }
 
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-
-    dependsOn(tasks.spotlessApply)
 
     testLogging {
         events = ["passed", "failed", "skipped"]
