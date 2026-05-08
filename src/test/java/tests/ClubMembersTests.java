@@ -29,17 +29,13 @@ class ClubMembersTests extends TestBase {
         String memberUid = UUID.randomUUID().toString().substring(0, 8);
 
         api.users.register(new RegistrationBodyModel("user_" + ownerUid, "pass_" + ownerUid));
-        ownerToken =
-                api.auth.loginAndGetAccessToken(
-                        new LoginBodyModel("user_" + ownerUid, "pass_" + ownerUid));
+        ownerToken = api.auth.loginAndGetAccessToken(new LoginBodyModel("user_" + ownerUid, "pass_" + ownerUid));
 
         ClubModel club = api.clubs.createClub(ownerToken, ClubFixtures.sampleClub(ownerUid));
         clubId = club.id();
 
         api.users.register(new RegistrationBodyModel("user_" + memberUid, "pass_" + memberUid));
-        memberToken =
-                api.auth.loginAndGetAccessToken(
-                        new LoginBodyModel("user_" + memberUid, "pass_" + memberUid));
+        memberToken = api.auth.loginAndGetAccessToken(new LoginBodyModel("user_" + memberUid, "pass_" + memberUid));
 
         UserModel member = api.users.getCurrentUser(memberToken);
         memberId = member.id();
@@ -66,7 +62,9 @@ class ClubMembersTests extends TestBase {
 
         ClubModel club = api.clubs.getClub(memberToken, clubId);
 
-        step("Проверки", () -> assertThat(club.members()).contains(memberId));
+        step("Проверки",
+                () -> step("members содержит id юзера, который сделал join", () -> assertThat(club.members())
+                        .contains(memberId)));
     }
 
     @Test
@@ -75,16 +73,18 @@ class ClubMembersTests extends TestBase {
     void leaveClub_removesCurrentUserFromMembers() {
         api.clubs.joinClub(memberToken, clubId);
         ClubModel beforeLeave = api.clubs.getClub(memberToken, clubId);
-        step("Проверка предусловия: member в списке после join",
-                () -> assertThat(beforeLeave.members()).contains(memberId));
+        step("Проверка предусловия",
+                () -> step("member в списке после join", () -> assertThat(beforeLeave.members())
+                        .contains(memberId)));
 
         api.clubs.leaveClub(memberToken, clubId);
 
         ClubModel afterLeave = api.clubs.getClub(memberToken, clubId);
-        step("Проверки",
-                () ->
-                        assertThat(afterLeave.members())
-                                .doesNotContain(memberId)
-                                .hasSize(beforeLeave.members().size() - 1));
+        step("Проверки", () -> {
+            step("members не содержит id юзера, который сделал leave", () -> assertThat(afterLeave.members())
+                    .doesNotContain(memberId));
+            step("размер members уменьшился ровно на 1", () -> assertThat(afterLeave.members())
+                    .hasSize(beforeLeave.members().size() - 1));
+        });
     }
 }

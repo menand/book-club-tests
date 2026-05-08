@@ -42,43 +42,39 @@ class UpdateUserTests extends TestBase {
     void getCurrentUserReturnsUserData() {
         UserModel user = api.users.getCurrentUser(token);
 
-        step("Проверки",
-                () -> {
-                    assertThat(user.id()).isGreaterThan(0);
-                    assertThat(user.username()).isEqualTo(testUsername);
-                });
+        step("Проверки", () -> {
+            step("id больше 0", () -> assertThat(user.id()).isGreaterThan(0));
+            step("username совпадает с зарегистрированным", () -> assertThat(user.username())
+                    .isEqualTo(testUsername));
+        });
     }
 
     @Test
     @Tag("SMOKE")
     @Description("Обновление пользователя через PUT")
     void updateUserWithPut() {
-        UserModel updated =
-                api.users.updateCurrentUser(
-                        token,
-                        new UpdateUserModel(testUsername, "Ivan", "Ivanov", "ivan@test.com"));
+        UserModel updated = api.users.updateCurrentUser(
+                token, new UpdateUserModel(testUsername, "Ivan", "Ivanov", "ivan@test.com"));
 
-        step("Проверки",
-                () -> {
-                    assertThat(updated.firstName()).isEqualTo("Ivan");
-                    assertThat(updated.lastName()).isEqualTo("Ivanov");
-                    assertThat(updated.email()).isEqualTo("ivan@test.com");
-                });
+        step("Проверки", () -> {
+            step("firstName = 'Ivan'", () -> assertThat(updated.firstName()).isEqualTo("Ivan"));
+            step("lastName = 'Ivanov'", () -> assertThat(updated.lastName()).isEqualTo("Ivanov"));
+            step("email = 'ivan@test.com'", () -> assertThat(updated.email()).isEqualTo("ivan@test.com"));
+        });
     }
 
     @Test
     @Tag("SMOKE")
     @Description("Частичное обновление пользователя через PATCH")
     void updateUserWithPatch() {
-        UserModel updated =
-                api.users.patchCurrentUser(
-                        token, new UpdateUserModel(null, "Petr", "Petrov", null));
+        UserModel updated = api.users.patchCurrentUser(token, new UpdateUserModel(null, "Petr", "Petrov", null));
 
-        step("Проверки",
-                () -> {
-                    assertThat(updated.firstName()).isEqualTo("Petr");
-                    assertThat(updated.lastName()).isEqualTo("Petrov");
-                });
+        step("Проверки", () -> {
+            step("firstName обновлён на 'Petr'", () -> assertThat(updated.firstName())
+                    .isEqualTo("Petr"));
+            step("lastName обновлён на 'Petrov'", () -> assertThat(updated.lastName())
+                    .isEqualTo("Petrov"));
+        });
     }
 
     @Test

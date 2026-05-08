@@ -123,10 +123,7 @@ spotless {
     java {
         encoding = 'UTF-8'
 
-        googleJavaFormat('1.34.1')
-                .aosp()
-                .reflowLongStrings()
-                .skipJavadocFormatting()
+        palantirJavaFormat('2.50.0')
 
         removeUnusedImports()
         formatAnnotations()

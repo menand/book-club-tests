@@ -48,101 +48,90 @@ class ClubReviewsCrudTests extends TestBase {
     @Description("Создание рецензии возвращает 201 и заполненный объект")
     void createReview_returnsCreatedReview() {
         ClubReviewModel created =
-                api.clubs.createReview(
-                        token, new CreateReviewBodyModel(clubId, "Excellent read", 5, 320));
+                api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "Excellent read", 5, 320));
 
         UserModel currentUser = api.users.getCurrentUser(token);
 
-        step("Проверки",
-                () -> {
-                    assertThat(created.id()).isPositive();
-                    assertThat(created.club()).isEqualTo(clubId);
-                    assertThat(created.review()).isEqualTo("Excellent read");
-                    assertThat(created.assessment()).isEqualTo(5);
-                    assertThat(created.readPages()).isEqualTo(320);
-                    assertThat(created.user().id()).isEqualTo(currentUser.id());
-                    assertThat(created.user().username()).isEqualTo(currentUser.username());
-                });
+        step("Проверки", () -> {
+            step("id присвоен (положительный)", () -> assertThat(created.id()).isPositive());
+            step("club совпадает с переданным", () -> assertThat(created.club()).isEqualTo(clubId));
+            step("review = 'Excellent read'", () -> assertThat(created.review()).isEqualTo("Excellent read"));
+            step("assessment = 5", () -> assertThat(created.assessment()).isEqualTo(5));
+            step("readPages = 320", () -> assertThat(created.readPages()).isEqualTo(320));
+            step("user.id совпадает с текущим юзером",
+                    () -> assertThat(created.user().id()).isEqualTo(currentUser.id()));
+            step("user.username совпадает с текущим юзером",
+                    () -> assertThat(created.user().username()).isEqualTo(currentUser.username()));
+        });
     }
 
     @Test
     @Tag("SMOKE")
     @Description("Получение рецензии по id возвращает данные созданной")
     void getReviewById_returnsReviewData() {
-        ClubReviewModel created =
-                api.clubs.createReview(
-                        token, new CreateReviewBodyModel(clubId, "Good book", 4, 200));
+        ClubReviewModel created = api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "Good book", 4, 200));
 
         ClubReviewModel fetched = api.clubs.getReview(token, created.id());
 
-        step("Проверки",
-                () -> {
-                    assertThat(fetched.id()).isEqualTo(created.id());
-                    assertThat(fetched.review()).isEqualTo("Good book");
-                    assertThat(fetched.assessment()).isEqualTo(4);
-                });
+        step("Проверки", () -> {
+            step("id совпадает с созданной", () -> assertThat(fetched.id()).isEqualTo(created.id()));
+            step("review = 'Good book'", () -> assertThat(fetched.review()).isEqualTo("Good book"));
+            step("assessment = 4", () -> assertThat(fetched.assessment()).isEqualTo(4));
+        });
     }
 
     @Test
     @Description("Список рецензий содержит созданную")
     void getReviewsList_includesCreated() {
         ClubReviewModel created =
-                api.clubs.createReview(
-                        token, new CreateReviewBodyModel(clubId, "Listed review", 3, 100));
+                api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "Listed review", 3, 100));
 
         ReviewsListResponseModel list = api.clubs.getReviews(token);
 
         step("Проверки",
-                () ->
-                        assertThat(list.results())
-                                .extracting(ClubReviewModel::id)
-                                .contains(created.id()));
+                () -> step("results содержит id созданной рецензии", () -> assertThat(list.results())
+                        .extracting(ClubReviewModel::id)
+                        .contains(created.id())));
     }
 
     @Test
     @Description("PUT рецензии полностью заменяет все поля")
     void updateReviewWithPut_replacesAllFields() {
-        ClubReviewModel created =
-                api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "Initial", 3, 50));
+        ClubReviewModel created = api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "Initial", 3, 50));
 
         ClubReviewModel updated =
-                api.clubs.updateReview(
-                        token,
-                        created.id(),
-                        new CreateReviewBodyModel(clubId, "Replaced text", 5, 500));
+                api.clubs.updateReview(token, created.id(), new CreateReviewBodyModel(clubId, "Replaced text", 5, 500));
 
-        step("Проверки",
-                () -> {
-                    assertThat(updated.review()).isEqualTo("Replaced text");
-                    assertThat(updated.assessment()).isEqualTo(5);
-                    assertThat(updated.readPages()).isEqualTo(500);
-                });
+        step("Проверки", () -> {
+            step("review обновлён на 'Replaced text'", () -> assertThat(updated.review())
+                    .isEqualTo("Replaced text"));
+            step("assessment обновлён на 5", () -> assertThat(updated.assessment())
+                    .isEqualTo(5));
+            step("readPages обновлён на 500", () -> assertThat(updated.readPages())
+                    .isEqualTo(500));
+        });
     }
 
     @Test
     @Description("PATCH рецензии обновляет только переданные поля")
     void patchReviewWithPatch_updatesPartial() {
-        ClubReviewModel created =
-                api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "Original", 2, 75));
+        ClubReviewModel created = api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "Original", 2, 75));
 
         ClubReviewModel patched =
-                api.clubs.patchReview(
-                        token, created.id(), new UpdateReviewBodyModel(null, null, 4, null));
+                api.clubs.patchReview(token, created.id(), new UpdateReviewBodyModel(null, null, 4, null));
 
-        step("Проверки",
-                () -> {
-                    assertThat(patched.assessment()).isEqualTo(4);
-                    assertThat(patched.review()).isEqualTo("Original");
-                    assertThat(patched.readPages()).isEqualTo(75);
-                });
+        step("Проверки", () -> {
+            step("assessment обновлён на 4", () -> assertThat(patched.assessment())
+                    .isEqualTo(4));
+            step("review не изменён", () -> assertThat(patched.review()).isEqualTo("Original"));
+            step("readPages не изменён", () -> assertThat(patched.readPages()).isEqualTo(75));
+        });
     }
 
     @Test
     @Description("DELETE рецензии возвращает 204; последующий GET — 404")
     void deleteReview_returns204_andSubsequentGetReturns404() {
-        ClubReviewModel created =
-                api.clubs.createReview(
-                        token, new CreateReviewBodyModel(clubId, "To delete", 1, 10));
+        ClubReviewModel created = api.clubs.createReview(token, new CreateReviewBodyModel(clubId, "To delete", 1, 10));
 
         api.clubs.deleteReview(token, created.id());
         api.clubs.getReviewNotFound(token, created.id());

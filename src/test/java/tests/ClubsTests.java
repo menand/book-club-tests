@@ -20,17 +20,14 @@ class ClubsTests extends TestBase {
         ClubsListResponseModel response = api.clubs.getClubs();
         int expectedSize = Math.min(response.count(), 50);
 
-        step("Проверки",
-                () -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response.count()).isGreaterThanOrEqualTo(0);
-                    assertThat(response.results()).isNotNull();
-                    assertThat(response.results())
-                            .as(
-                                    "размер results должен быть %d (count=%d)",
-                                    expectedSize, response.count())
-                            .hasSize(expectedSize);
-                });
+        step("Проверки", () -> {
+            step("ответ не null", () -> assertThat(response).isNotNull());
+            step("count >= 0", () -> assertThat(response.count()).isGreaterThanOrEqualTo(0));
+            step("results не null", () -> assertThat(response.results()).isNotNull());
+            step("размер results = min(count, 50)", () -> assertThat(response.results())
+                    .as("размер results должен быть %d (count=%d)", expectedSize, response.count())
+                    .hasSize(expectedSize));
+        });
     }
 
     @Test
@@ -39,20 +36,21 @@ class ClubsTests extends TestBase {
     void getClubsEachClubHasRequiredFields() {
         ClubsListResponseModel response = api.clubs.getClubs();
 
-        step("Проверки",
-                () -> {
-                    for (ClubModel club : response.results()) {
-                        assertThat(club.id()).isNotNull().isPositive();
-                        assertThat(club.bookTitle()).isNotNull();
-                        assertThat(club.bookAuthors()).isNotNull();
-                        assertThat(club.publicationYear()).isNotNull();
-                        assertThat(club.description()).isNotNull();
-                        assertThat(club.telegramChatLink()).isNotNull();
-                        assertThat(club.owner()).isNotNull().isPositive();
-                        assertThat(club.members()).isNotNull();
-                        assertThat(club.reviews()).isNotNull();
-                        assertThat(club.created()).isNotNull();
-                    }
+        step("Проверки: каждый клуб имеет все обязательные поля", () -> {
+            for (ClubModel club : response.results()) {
+                step("клуб id=" + club.id() + " — поля заполнены", () -> {
+                    assertThat(club.id()).isNotNull().isPositive();
+                    assertThat(club.bookTitle()).isNotNull();
+                    assertThat(club.bookAuthors()).isNotNull();
+                    assertThat(club.publicationYear()).isNotNull();
+                    assertThat(club.description()).isNotNull();
+                    assertThat(club.telegramChatLink()).isNotNull();
+                    assertThat(club.owner()).isNotNull().isPositive();
+                    assertThat(club.members()).isNotNull();
+                    assertThat(club.reviews()).isNotNull();
+                    assertThat(club.created()).isNotNull();
                 });
+            }
+        });
     }
 }

@@ -49,15 +49,18 @@ class RegistrationTests extends TestBase {
                 api.users.register(new RegistrationBodyModel(username, password));
         userCreated = true;
 
-        step("Проверки",
-                () -> {
-                    assertThat(registrationResponse.id()).isGreaterThan(0);
-                    assertThat(registrationResponse.username()).isEqualTo(username);
-                    assertThat(registrationResponse.firstName()).isEmpty();
-                    assertThat(registrationResponse.lastName()).isEmpty();
-                    assertThat(registrationResponse.email()).isEmpty();
-                    assertThat(registrationResponse.remoteAddr()).matches(REGISTRATION_IP_REGEXP);
-                });
+        step("Проверки", () -> {
+            step("id больше 0", () -> assertThat(registrationResponse.id()).isGreaterThan(0));
+            step("username совпадает с переданным", () -> assertThat(registrationResponse.username())
+                    .isEqualTo(username));
+            step("firstName пустое", () -> assertThat(registrationResponse.firstName())
+                    .isEmpty());
+            step("lastName пустое", () -> assertThat(registrationResponse.lastName())
+                    .isEmpty());
+            step("email пустой", () -> assertThat(registrationResponse.email()).isEmpty());
+            step("remoteAddr — валидный IP-адрес", () -> assertThat(registrationResponse.remoteAddr())
+                    .matches(REGISTRATION_IP_REGEXP));
+        });
     }
 
     @Test
@@ -69,12 +72,12 @@ class RegistrationTests extends TestBase {
         userCreated = true;
         ExistingUserResponseModel secondResponse = api.users.registerExistingUser(regBody);
 
-        step("Проверки",
-                () -> {
-                    assertThat(firstResponse.username()).isEqualTo(username);
-                    assertThat(secondResponse.username().getFirst())
-                            .isEqualTo(REGISTRATION_EXISTING_USER_ERROR);
-                });
+        step("Проверки", () -> {
+            step("username первой регистрации совпадает с переданным", () -> assertThat(firstResponse.username())
+                    .isEqualTo(username));
+            step("первая ошибка username = 'A user with that username already exists.'",
+                    () -> assertThat(secondResponse.username().getFirst()).isEqualTo(REGISTRATION_EXISTING_USER_ERROR));
+        });
     }
 
     @Test
@@ -83,27 +86,27 @@ class RegistrationTests extends TestBase {
         ValidationErrorResponseModel response =
                 api.users.registerWithValidationError(new RegistrationBodyModel(username, ""));
 
-        step("Проверки",
-                () -> {
-                    assertThat(response.password()).isNotEmpty();
-                    assertThat(response.password().getFirst())
-                            .contains("This field may not be blank.");
-                });
+        step("Проверки", () -> {
+            step("ошибки по полю password присутствуют", () -> assertThat(response.password())
+                    .isNotEmpty());
+            step("первая ошибка password содержит 'This field may not be blank.'",
+                    () -> assertThat(response.password().getFirst()).contains("This field may not be blank."));
+        });
     }
 
     @Test
     @Description("Регистрация с слишком длинным username (256 символов) — ожидается 400")
     void registrationWithTooLongUsernameTest() {
         ValidationErrorResponseModel response =
-                api.users.registerWithValidationError(
-                        new RegistrationBodyModel("u".repeat(256), password));
+                api.users.registerWithValidationError(new RegistrationBodyModel("u".repeat(256), password));
 
-        step("Проверки",
-                () -> {
-                    assertThat(response.username()).isNotEmpty();
-                    assertThat(response.username().getFirst())
-                            .contains("Ensure this field has no more than 150 characters");
-                });
+        step("Проверки", () -> {
+            step("ошибки по полю username присутствуют", () -> assertThat(response.username())
+                    .isNotEmpty());
+            step("первая ошибка username — про лимит 150 символов", () -> assertThat(
+                            response.username().getFirst())
+                    .contains("Ensure this field has no more than 150" + " characters"));
+        });
     }
 
     @Test
@@ -114,23 +117,15 @@ class RegistrationTests extends TestBase {
 
     @Test
     @Description(
-            "Отправка данных в неподдерживаемом формате (application/xml) — ожидается 415"
-                    + " Unsupported Media Type")
+            "Отправка данных в неподдерживаемом формате (application/xml) — ожидается 415" + " Unsupported Media Type")
     void registrationWithUnsupportedMediaTypeTest() {
-        String xmlBody =
-                "<user><username>"
-                        + username
-                        + "</username><password>"
-                        + password
-                        + "</password></user>";
+        String xmlBody = "<user><username>" + username + "</username><password>" + password + "</password></user>";
 
         api.users.registerWithXmlContentType(xmlBody);
     }
 
     @Test
-    @Description(
-            "Отправка данных без обязательных полей (username и password) — ожидается 400 Bad"
-                    + " Request")
+    @Description("Отправка данных без обязательных полей (username и password) — ожидается 400 Bad" + " Request")
     void registrationWithMissingRequiredFieldsTest() {
         api.users.registerWithEmptyBody();
     }
