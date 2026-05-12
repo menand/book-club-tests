@@ -4,92 +4,138 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-API-тесты для сервиса Book Club (`https://book-club.qa.guru`, базовый путь `/api/v1`). Java 21, JUnit 6, REST Assured 6, AssertJ, Allure, JSON Schema Validator. Все ассерты — AssertJ; модели — Java records.
+Тест-фреймворк для сервиса Book Club. **API** (REST Assured 6 + JUnit 6 + AssertJ) против `https://book-club.qa.guru/api/v1` и **UI** (Selenide 7.16 + Vue 3 SPA) против `https://book-club.qa.guru/`. Allure, Datafaker, Spotless с palantir-java-format. Java 21.
 
 ## Команды
 
-Всегда через Gradle wrapper:
-
 ```bash
-./gradlew test                                    # все тесты, параллельно по классам
-./gradlew test --tests LoginTests                 # один тестовый класс
-./gradlew test --tests '*loginWithEmpty*'         # отдельный тест по паттерну
-./gradlew test -Dgroups=SMOKE                     # по тегам JUnit
-./gradlew test -Dgroups=LOGIN,REGRESS             # несколько тегов (OR)
-./gradlew spotlessApply                           # автоформатирование (запускается и перед каждым test)
-./gradlew spotlessCheck                           # проверка (запускается через ./gradlew check)
-./gradlew allureServe                             # Allure-отчёт на :19432
-./gradlew clean test                              # чистый прогон
+./gradlew test                                    # все 71 тест
+./gradlew test -Dgroups=API                       # 58 API-тестов (без браузера)
+./gradlew test -Dgroups=UI                        # 13 UI-тестов (нужен Chrome/Selenoid)
+./gradlew test -Dgroups=SMOKE                     # дымовые
+./gradlew test --tests 'ClubsCrudTests'           # один класс
+./gradlew test --tests '*loginWithEmpty*'         # по паттерну
+./gradlew spotlessApply                           # автоформатирование (вручную)
+./gradlew check                                   # spotlessCheck без правки
+./gradlew allureServe                             # Allure на :19432
 ```
 
-Существующие теги: `LOGIN`, `LOGOUT`, `REGISTRATION`, `USER`, `CLUBS`, `SMOKE`, `REGRESS`. Добавляйте теги через `@Tag` на классе/методе.
+Теги: `API`, `UI`, `REGRESS`, `SMOKE`, `LOGIN`, `LOGOUT`, `REGISTRATION`, `USER`, `CLUBS`.
 
-`tasks.test` имеет `dependsOn(spotlessApply)` — форматирование применяется автоматически перед запуском тестов. Не нужно вызывать `spotlessApply` отдельно перед `test`.
+`spotlessApply` **не** цеплён к `tasks.test` — `./gradlew test` не правит файлы. Вручную перед коммитом.
 
 ## Архитектура
 
 ### Слои
 
 ```
-tests/      ← extends TestBase, использует только api.*  (никакого given() в тестах)
-api/        ← ApiClient → AuthApiClient / UsersApiClient / ClubsApiClient
-specs/      ← Request- и Response-спеки (BaseSpec + домен)
-models/     ← Java records (DTO для тел и ответов)
-allure/     ← CustomAllureListener с FreeMarker-шаблонами
-resources/schemas/  ← JSON Schema для валидации ответов
-resources/tpl/      ← request.ftl / response.ftl для Allure
+tests/                       ← API-тесты + fixtures
+tests/ui/                    ← UI-тесты + Page Objects + BrowserAuth
+api/                         ← ApiClient → AuthApiClient / UsersApiClient / ClubsApiClient
+specs/                       ← Request- и Response-спеки
+models/                      ← Java records
+resources/schemas/           ← JSON Schema
+resources/tpl/               ← request.ftl / response.ftl (Allure)
 ```
 
-`ApiClient` — единая точка входа: `api.auth`, `api.users`, `api.clubs`. Каждый клиент инкапсулирует и позитивные, и негативные сценарии своего эндпоинта (см. `AuthApiClient.loginWrongCredentials`, `loginWithValidationError`, `logoutWithBlacklistedToken` и т.п.). Когда нужен новый сценарий — добавляйте метод в соответствующий ApiClient, не вызывайте `given()` из теста.
+### API-слой
 
-### Спеки
+- `ApiClient` — единая точка входа: `api.auth`, `api.users`, `api.clubs`.
+- Каждый клиент инкапсулирует и позитивные, и негативные сценарии (401/403/404/400/405/415). Тесты не вызывают `given()` напрямую.
+- Все методы помечены `@Step("...")` для Allure.
 
-- `BaseSpec.baseRequestSpec` — фильтр Allure + `log().all()` + `ContentType.JSON`. Все request-спеки строятся от него.
-- `UserSpec.authRequestSpec(token)` — добавляет `Authorization: Bearer <token>`. Никогда не выставляйте этот заголовок вручную в тестах/клиентах.
-- Response-спеки валидируют статус-код И JSON Schema (`matchesJsonSchemaInClasspath(...)`). При добавлении нового эндпоинта обязательно создавайте схему в `resources/schemas/<домен>/`.
+### Spec-слой
+
+- `BaseSpec.baseRequestSpec` — фильтр Allure + `log().all()` + `ContentType.JSON`. ApiClient'ы используют его напрямую (отдельных request-spec на домены нет).
+- `UserSpec.authRequestSpec(token)` — `Authorization: Bearer`. Не выставлять header вручную.
+- Response-спеки на 2xx с JSON-телом валидируют `expectContentType(JSON)` **до** `matchesJsonSchemaInClasspath(...)` — даёт понятную ошибку при HTML-ответе от стенда (502/504/debug-page).
+- Все `static` поля в Spec — `final` (защита от мутации при параллельном прогоне).
 
 ### Модели
 
-- Только records, без Lombok (Lombok доступен, но новые модели — records).
-- Accessors без префикса `get`: `response.access()`, `user.firstName()`.
-- Для PATCH-запросов с опциональными полями используйте `@JsonInclude(NON_NULL)` (см. `UpdateUserModel`).
-- Одноразовые DTO передавайте инлайн: `api.auth.login(new LoginBodyModel(user, pass))`.
+- Только records, без Lombok.
+- Accessors без `get`: `response.access()`, `user.firstName()`.
+- PATCH-модели: `@JsonInclude(NON_NULL)` (см. `UpdateUserModel`, `UpdateClubBodyModel`, `UpdateReviewBodyModel`).
+
+### Fixtures (тестовые данные)
+
+- `Fakers.FAKER` — общий `net.datafaker.Faker`.
+- `Fakers.shortUid()` — 8-символьный UUID-суффикс.
+- `UserFixtures.createAndLogin(api)` → `TestUser(uid, username, password, token)`. Регистрирует юзера через API и логинится.
+- `ClubFixtures.sampleClub()` → `CreateClubBodyModel` (Faker book/author/sentence/year + UUID-уникальный bookTitle, потому что у бэка unique-constraint).
+- `ReviewFixtures.sampleReview(clubId)` → `CreateReviewBodyModel`.
+- Граничные значения (`assessment=6/0`, `clubId=999_999_999`, `"u".repeat(256)`, `"DELETE"` method) — **захардкожены**, это тест-кейсы, а не данные.
+
+### UI (Selenide)
+
+- `UiTestBase extends TestBase` — Selenide-конфиг (`Configuration.baseUrl`, `browser`, `browserSize`, `timeout`, `headless`), AllureSelenide listener, `closeWebDriver()` после каждого теста. Поддержка `-Dselenide.remote=...` → Selenoid с `enableVNC`/`enableVideo` и `browserVersion`.
+- `BrowserAuth.loginViaApiAndOpenHome(api)` — регистрирует юзера через API, логинится, открывает `/`, кладёт точный JSON в `localStorage["book_club_auth"]` (структура подтверждена эмпирически), возвращает `AuthSession`. Подготовка UI-тестов идёт через API — UI логин используется только в `UiAuthTests`.
+- Page Objects (`tests/ui/pages/`): `SignInPage`, `SignUpPage`, `ClubsListPage`, `ClubDetailPage`, `ReviewFormPage`. Селекторы — `data-testid` где есть, иначе CSS-классы Vue (`.club-card`, `.review-card`, `.add-review-btn`, `.pagination-button`, `.no-reviews`).
 
 ### TestBase
 
-Базовый URI и `basePath` выставляются в `TestBase.@BeforeAll`. `protected static final ApiClient api` — наследуется тестами. Все тестовые классы должны `extends TestBase`.
+Базовый URI и `basePath` через `System.getProperty("api.baseUri", "https://book-club.qa.guru")`. `protected static final ApiClient api`. Все тестовые классы наследуют `TestBase` (или `UiTestBase`, который наследует `TestBase`).
 
 ## Параллелизм
 
-Конфиг в `src/test/resources/junit-platform.properties`: классы выполняются параллельно (`parallelism=4`), методы внутри класса — последовательно (`mode.default=same_thread`). `maxParallelForks` в Gradle = `availableProcessors / 2`.
+`src/test/resources/junit-platform.properties`: классы concurrent (`parallelism=4`), методы внутри класса — последовательно. `maxParallelForks = availableProcessors / 2`.
 
-Для уникальных данных (регистрация и т.п.) используйте `UUID.randomUUID()`, не `System.currentTimeMillis()` — иначе коллизии между параллельными классами.
+Для уникальных данных — `Fakers.shortUid()` + Faker. `UserFixtures.createAndLogin` гарантирует уникального юзера на каждый тест.
+
+## Очистка тестовых данных
+
+Тесты, создающие юзеров, обязаны удалять их в `@AfterEach` через `api.users.deleteCurrentUser(token)`. Backend каскадно удаляет связанные клубы/рецензии — отдельный delete не нужен.
+
+Для тестов с двумя юзерами (`ClubMembersTests`, `ClubsPermissionsTests`, `ClubReviewsPermissionsTests`, `UiClubDetailTests.joinClub*`, `UiClubReviewsTests`) — `try/finally` + null-check, чтобы второй juzer удалялся, даже если первый delete упал.
+
+В `RegistrationTests` (где юзер создаётся в самом тесте, а не в `@BeforeEach`) — флаг `userCreated`, ставится после успешной регистрации; `@AfterEach` чистит только при true.
 
 ## Spotless / стиль кода
 
-- Google Java Format AOSP, `reflowLongStrings`, `skipJavadocFormatting`.
-- **Wildcard-импорты запрещены** кастомным правилом — билд упадёт. Раскрывайте все `import foo.*;` в явные импорты, включая `static`.
+- **palantir-java-format** (с 2026-05-12 заменил Google Java Format AOSP — шире строка, лучше работает с AssertJ-цепочками).
 - `removeUnusedImports`, `formatAnnotations`, `endWithNewline`.
-- `ratchetFrom = 'origin/main'` — Spotless форматирует только изменённые относительно `main` файлы.
-- Кастомное правило `Step one line` сжимает многострочный `step("...")` в одну строку.
+- Кастомные правила: запрет wildcard-импортов (билд падает), `step("...")` сжимает в одну строку.
+- `ratchetFrom = 'origin/main'` — Spotless форматирует только изменённое.
 
-## Конфигурация
+## Конфигурация (-D properties)
 
-Базовый URL **захардкожен** в `TestBase` (`https://book-club.qa.guru`). Если потребуется работа против другого окружения — менять там, а не в спеках.
+| Параметр | Назначение | Default |
+|---|---|---|
+| `groups` | Теги (`API`, `UI`, `SMOKE`, ...) | — |
+| `api.baseUri` / `api.basePath` | API | `https://book-club.qa.guru` / `/api/v1` |
+| `ui.baseUri` | UI | `https://book-club.qa.guru` |
+| `browser` | Selenide | `chrome` |
+| `headless` | Selenide local | `true` |
+| `selenide.remote` | Selenoid hub URL | — |
+| `browserVersion` | Selenoid | `128.0` |
 
-Allure-результаты пишутся в `build/allure-results` (через `allure.results.directory` system property в `tasks.test`).
+В `build.gradle` все `api.*`, `ui.*`, `selenide.*`, `browser`, `headless` прокидываются в форкнутую JVM теста.
 
 ## Конвенции при изменениях
 
-- Тест → ApiClient → Spec → Model → Schema. Добавление нового эндпоинта затрагивает все слои.
-- Не вызывайте `given()` напрямую в тестах. Если этого требует новый сценарий — добавьте метод в ApiClient.
-- Авторизация — через `UserSpec.authRequestSpec(token)`.
-- Каждый публичный метод ApiClient помечайте `@Step("...")` для читаемых Allure-отчётов.
-- AGENTS.md в корне устарел (упоминает Selenide / `ru.india.mall`) — это API-проект на REST Assured, package `tests`/`api`/`specs`/`models`. Не следуйте AGENTS.md дословно.
+- **Архитектура слоёв**: Тест → ApiClient → Spec → Model → Schema.
+- **Никаких `given()` в тестах** — добавьте метод в ApiClient.
+- **Авторизация** — через `UserSpec.authRequestSpec(token)`.
+- **Тестовые данные** — через `Fakers`/`ClubFixtures`/`ReviewFixtures`/`UserFixtures`. Граничные значения захардкожены.
+- **Каждый ApiClient-метод** — `@Step("...")` для Allure.
+- **Каждый 2xx-JSON-Spec** — `expectContentType(JSON)` + `matchesJsonSchemaInClasspath(...)`.
+- **Assertions в тестах** — вложенный `Allure.step("Проверки", () -> step("...", () -> assertThat(...)))`, чтобы в Allure-дереве было видно, какая проверка упала.
+- **Cleanup юзеров** в `@AfterEach`.
+- **UI-селекторы** — приоритет `data-testid`, далее CSS-классы Vue.
+- **`static` поля Spec** — всегда `final`.
+- **`@Tag("API")`** на классах в `tests/`, **`@Tag("UI")`** — в `tests/ui/`. `@Tag("REGRESS")` — везде.
+
+## Диагностика
+
+- При `JsonParseException: Unexpected character ('<' ...)` — стенд вернул HTML вместо JSON (502/504/debug). Сейчас обрабатывается через `expectContentType(JSON)`: тест упадёт с понятным сообщением вместо Jackson-ошибки.
+- При UI-падении на `Chrome instance exited` в Jenkins — забыт `-Dselenide.remote=...` или в `build.gradle` не прокидывается. Прокидка настроена для `selenide.*` и `ui.*` properties.
 
 ## MCP / документация
 
-Для актуальных доков по библиотекам (REST Assured, JUnit 6, Allure, Jackson и т.п.) используйте `context7` MCP, а не веб-поиск.
+Для актуальных доков по библиотекам (REST Assured, Selenide, JUnit 6, Allure, Datafaker, Jackson) — `context7` MCP, не веб-поиск.
+Для разведки UI/API стенда — `playwright` MCP (`browser_navigate`/`browser_evaluate`/`browser_snapshot`) + curl.
+
+Версии библиотек проверять через `https://repo1.maven.org/maven2/<group>/<artifact>/maven-metadata.xml` (это сам репозиторий — всегда актуально). `search.maven.org/solrsearch` — индекс с задержкой, доверять нельзя.
 
 ---
 
