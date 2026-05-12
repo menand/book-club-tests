@@ -4,10 +4,7 @@ import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Description;
-import java.util.UUID;
 import models.clubs.ClubModel;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import models.users.UserModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,20 +22,17 @@ class ClubMembersTests extends TestBase {
 
     @BeforeEach
     void initOwnerAndMember() {
-        String ownerUid = UUID.randomUUID().toString().substring(0, 8);
-        String memberUid = UUID.randomUUID().toString().substring(0, 8);
+        UserFixtures.TestUser owner = UserFixtures.createAndLogin(api);
+        ownerToken = owner.token();
 
-        api.users.register(new RegistrationBodyModel("user_" + ownerUid, "pass_" + ownerUid));
-        ownerToken = api.auth.loginAndGetAccessToken(new LoginBodyModel("user_" + ownerUid, "pass_" + ownerUid));
-
-        ClubModel club = api.clubs.createClub(ownerToken, ClubFixtures.sampleClub(ownerUid));
+        ClubModel club = api.clubs.createClub(ownerToken, ClubFixtures.sampleClub());
         clubId = club.id();
 
-        api.users.register(new RegistrationBodyModel("user_" + memberUid, "pass_" + memberUid));
-        memberToken = api.auth.loginAndGetAccessToken(new LoginBodyModel("user_" + memberUid, "pass_" + memberUid));
+        UserFixtures.TestUser member = UserFixtures.createAndLogin(api);
+        memberToken = member.token();
 
-        UserModel member = api.users.getCurrentUser(memberToken);
-        memberId = member.id();
+        UserModel memberInfo = api.users.getCurrentUser(memberToken);
+        memberId = memberInfo.id();
     }
 
     @AfterEach

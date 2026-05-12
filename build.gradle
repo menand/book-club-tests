@@ -71,6 +71,11 @@ dependencies {
     testImplementation  "io.rest-assured:json-schema-validator:$restAssuredVersion"
     testImplementation  "io.qameta.allure:allure-rest-assured:$allureVersion"
 
+    testImplementation 'com.codeborne:selenide:7.16.1'
+    testImplementation "io.qameta.allure:allure-selenide:$allureVersion"
+
+    testImplementation 'net.datafaker:datafaker:2.5.4'
+
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

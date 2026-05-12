@@ -8,6 +8,6 @@ import io.restassured.specification.RequestSpecification;
 
 public class BaseSpec {
 
-    public static RequestSpecification baseRequestSpec =
+    public static final RequestSpecification baseRequestSpec =
             with().filter(withCustomTemplate()).log().all().contentType(JSON);
 }

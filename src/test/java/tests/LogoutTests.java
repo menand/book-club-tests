@@ -1,10 +1,8 @@
 package tests;
 
 import io.qameta.allure.Description;
-import java.util.UUID;
 import models.login.LoginBodyModel;
 import models.logout.LogoutBodyModel;
-import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -18,12 +16,8 @@ class LogoutTests extends TestBase {
 
     @BeforeEach
     void initUser() {
-        String uid = UUID.randomUUID().toString().substring(0, 8);
-        String testUsername = "user_" + uid;
-        String testPassword = "pass_" + uid;
-
-        api.users.register(new RegistrationBodyModel(testUsername, testPassword));
-        credentials = new LoginBodyModel(testUsername, testPassword);
+        UserFixtures.TestUser user = UserFixtures.createAndLogin(api);
+        credentials = new LoginBodyModel(user.username(), user.password());
     }
 
     @AfterEach
@@ -43,9 +37,8 @@ class LogoutTests extends TestBase {
     }
 
     @Test
-    @Description(
-            "Попытка выхода с невалидным refresh token (например, изменённый или случайный) —"
-                    + " ожидается 401 Unauthorized")
+    @Description("Попытка выхода с невалидным refresh token (например, изменённый или случайный) —"
+            + " ожидается 401 Unauthorized")
     void logoutWithInvalidRefreshTokenTest() {
         String refreshToken = api.auth.loginAndGetRefreshToken(credentials);
 
@@ -60,8 +53,7 @@ class LogoutTests extends TestBase {
 
     @Test
     @Description(
-            "Попытка выхода с уже использованным refresh token (повторный logout) — ожидается 401"
-                    + " Unauthorized")
+            "Попытка выхода с уже использованным refresh token (повторный logout) — ожидается 401" + " Unauthorized")
     void logoutWithUsedRefreshTokenTest() {
         String refreshToken = api.auth.loginAndGetRefreshToken(credentials);
 

@@ -5,7 +5,6 @@ import static specs.BaseSpec.baseRequestSpec;
 import static specs.registration.RegistrationSpec.badRequestResponseSpec;
 import static specs.registration.RegistrationSpec.existingUserRegistrationResponseSpec;
 import static specs.registration.RegistrationSpec.methodNotAllowedResponseSpec;
-import static specs.registration.RegistrationSpec.registrationRequestSpec;
 import static specs.registration.RegistrationSpec.successfulRegistrationResponseSpec;
 import static specs.registration.RegistrationSpec.unsupportedMediaTypeResponseSpec;
 import static specs.users.UserSpec.authRequestSpec;
@@ -25,7 +24,7 @@ public class UsersApiClient {
 
     @Step("Регистрация POST /users/register/")
     public SuccessfulRegistrationResponseModel register(RegistrationBodyModel body) {
-        return given(registrationRequestSpec)
+        return given(baseRequestSpec)
                 .body(body)
                 .when()
                 .post("/users/register/")
@@ -37,7 +36,7 @@ public class UsersApiClient {
 
     @Step("Регистрация уже существующего пользователя")
     public ExistingUserResponseModel registerExistingUser(RegistrationBodyModel body) {
-        return given(registrationRequestSpec)
+        return given(baseRequestSpec)
                 .body(body)
                 .when()
                 .post("/users/register/")
@@ -49,7 +48,7 @@ public class UsersApiClient {
 
     @Step("Регистрация с ошибкой валидации")
     public ValidationErrorResponseModel registerWithValidationError(RegistrationBodyModel body) {
-        return given(registrationRequestSpec)
+        return given(baseRequestSpec)
                 .body(body)
                 .when()
                 .post("/users/register/")
@@ -101,21 +100,12 @@ public class UsersApiClient {
 
     @Step("Удаление текущего пользователя DELETE /users/me/")
     public void deleteCurrentUser(String token) {
-        given(authRequestSpec(token))
-                .when()
-                .delete("/users/me/")
-                .then()
-                .spec(userNoContentResponseSpec);
+        given(authRequestSpec(token)).when().delete("/users/me/").then().spec(userNoContentResponseSpec);
     }
 
     @Step("GET /users/register/ — ожидается 405 Method Not Allowed")
     public void registerWithGetMethod(RegistrationBodyModel body) {
-        given(registrationRequestSpec)
-                .body(body)
-                .when()
-                .get("/users/register/")
-                .then()
-                .spec(methodNotAllowedResponseSpec);
+        given(baseRequestSpec).body(body).when().get("/users/register/").then().spec(methodNotAllowedResponseSpec);
     }
 
     @Step("POST /users/register/ с XML — ожидается 415 Unsupported Media Type")
@@ -131,11 +121,6 @@ public class UsersApiClient {
 
     @Step("POST /users/register/ с пустым телом — ожидается 400 Bad Request")
     public void registerWithEmptyBody() {
-        given(registrationRequestSpec)
-                .body("{}")
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(badRequestResponseSpec);
+        given(baseRequestSpec).body("{}").when().post("/users/register/").then().spec(badRequestResponseSpec);
     }
 }

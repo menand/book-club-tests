@@ -5,6 +5,7 @@ gradle/
 !**/src/test/**
 bin/
 .settings/
+.playwright-mcp/
 
 ### IntelliJ IDEA ###
 .idea

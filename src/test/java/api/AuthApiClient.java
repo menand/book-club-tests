@@ -1,13 +1,12 @@
 package api;
 
 import static io.restassured.RestAssured.given;
-import static specs.login.LoginSpec.loginRequestSpec;
+import static specs.BaseSpec.baseRequestSpec;
 import static specs.login.LoginSpec.methodNotAllowResponseSpec;
 import static specs.login.LoginSpec.successfulLoginResponseSpec;
 import static specs.login.LoginSpec.validationErrorResponseSpec;
 import static specs.login.LoginSpec.wrongCredentialsLoginResponseSpec;
 import static specs.logout.LogoutSpec.badRequestLogoutResponseSpec;
-import static specs.logout.LogoutSpec.logoutRequestSpec;
 import static specs.logout.LogoutSpec.successfulLogoutResponseSpec;
 import static specs.logout.LogoutSpec.tokenBlacklistResponseSpec;
 import static specs.logout.LogoutSpec.unauthorizedLogoutResponseSpec;
@@ -23,7 +22,7 @@ public class AuthApiClient {
 
     @Step("Авторизация POST /auth/token/")
     public SuccessfulLoginResponseModel login(LoginBodyModel loginBody) {
-        return given(loginRequestSpec)
+        return given(baseRequestSpec)
                 .body(loginBody)
                 .when()
                 .post("/auth/token/")
@@ -35,7 +34,7 @@ public class AuthApiClient {
 
     @Step("Авторизация и получение токена")
     public String loginAndGetRefreshToken(LoginBodyModel loginBody) {
-        return given(loginRequestSpec)
+        return given(baseRequestSpec)
                 .body(loginBody)
                 .when()
                 .post("/auth/token/")
@@ -47,7 +46,7 @@ public class AuthApiClient {
 
     @Step("Авторизация и получение access-токена")
     public String loginAndGetAccessToken(LoginBodyModel loginBody) {
-        return given(loginRequestSpec)
+        return given(baseRequestSpec)
                 .body(loginBody)
                 .when()
                 .post("/auth/token/")
@@ -59,7 +58,7 @@ public class AuthApiClient {
 
     @Step("Авторизация с неверными учётными данными")
     public WrongCredentialsLoginResponseModel loginWrongCredentials(LoginBodyModel loginBody) {
-        return given(loginRequestSpec)
+        return given(baseRequestSpec)
                 .body(loginBody)
                 .when()
                 .post("/auth/token/")
@@ -71,7 +70,7 @@ public class AuthApiClient {
 
     @Step("Авторизация с ошибкой валидации")
     public ValidationErrorResponseModel loginWithValidationError(LoginBodyModel loginBody) {
-        return given(loginRequestSpec)
+        return given(baseRequestSpec)
                 .body(loginBody)
                 .when()
                 .post("/auth/token/")
@@ -83,7 +82,7 @@ public class AuthApiClient {
 
     @Step("Отправка запроса logout")
     public void logout(LogoutBodyModel logoutBody) {
-        given(logoutRequestSpec)
+        given(baseRequestSpec)
                 .body(logoutBody)
                 .when()
                 .post("/auth/logout/")
@@ -93,7 +92,7 @@ public class AuthApiClient {
 
     @Step("Logout с невалидным refresh-токеном")
     public void logoutWithInvalidToken(LogoutBodyModel logoutBody) {
-        given(logoutRequestSpec)
+        given(baseRequestSpec)
                 .body(logoutBody)
                 .when()
                 .post("/auth/logout/")
@@ -103,7 +102,7 @@ public class AuthApiClient {
 
     @Step("Logout с заблокированным refresh-токеном")
     public void logoutWithBlacklistedToken(LogoutBodyModel logoutBody) {
-        given(logoutRequestSpec)
+        given(baseRequestSpec)
                 .body(logoutBody)
                 .when()
                 .post("/auth/logout/")
@@ -113,7 +112,7 @@ public class AuthApiClient {
 
     @Step("Logout с некорректным телом запроса")
     public void logoutWithBadRequest(LogoutBodyModel logoutBody) {
-        given(logoutRequestSpec)
+        given(baseRequestSpec)
                 .body(logoutBody)
                 .when()
                 .post("/auth/logout/")
@@ -123,7 +122,7 @@ public class AuthApiClient {
 
     @Step("Попытка входа в систему с использованием метода DELETE")
     public WrongCredentialsLoginResponseModel loginWithDeleteMethod(LoginBodyModel loginBody) {
-        return given(loginRequestSpec)
+        return given(baseRequestSpec)
                 .body(loginBody)
                 .when()
                 .delete("/auth/token/")

@@ -4,9 +4,6 @@ import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Description;
-import java.util.UUID;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import models.users.UpdateUserModel;
 import models.users.UserModel;
 import org.junit.jupiter.api.AfterEach;
@@ -23,12 +20,9 @@ class UpdateUserTests extends TestBase {
 
     @BeforeEach
     void initUser() {
-        String uid = UUID.randomUUID().toString().substring(0, 8);
-        testUsername = "user_" + uid;
-        String testPassword = "pass_" + uid;
-
-        api.users.register(new RegistrationBodyModel(testUsername, testPassword));
-        token = api.auth.loginAndGetAccessToken(new LoginBodyModel(testUsername, testPassword));
+        UserFixtures.TestUser user = UserFixtures.createAndLogin(api);
+        testUsername = user.username();
+        token = user.token();
     }
 
     @AfterEach

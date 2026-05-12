@@ -21,9 +21,7 @@ class ClubsTests extends TestBase {
         int expectedSize = Math.min(response.count(), 50);
 
         step("Проверки", () -> {
-            step("ответ не null", () -> assertThat(response).isNotNull());
             step("count >= 0", () -> assertThat(response.count()).isGreaterThanOrEqualTo(0));
-            step("results не null", () -> assertThat(response.results()).isNotNull());
             step("размер results = min(count, 50)", () -> assertThat(response.results())
                     .as("размер results должен быть %d (count=%d)", expectedSize, response.count())
                     .hasSize(expectedSize));

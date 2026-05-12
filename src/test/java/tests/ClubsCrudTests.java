@@ -2,14 +2,12 @@ package tests;
 
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
+import static tests.Fakers.FAKER;
 
 import io.qameta.allure.Description;
-import java.util.UUID;
 import models.clubs.ClubModel;
 import models.clubs.CreateClubBodyModel;
 import models.clubs.UpdateClubBodyModel;
-import models.login.LoginBodyModel;
-import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -20,16 +18,11 @@ import org.junit.jupiter.api.Test;
 class ClubsCrudTests extends TestBase {
 
     private String token;
-    private String uid;
 
     @BeforeEach
     void initUser() {
-        uid = UUID.randomUUID().toString().substring(0, 8);
-        String username = "user_" + uid;
-        String password = "pass_" + uid;
-
-        api.users.register(new RegistrationBodyModel(username, password));
-        token = api.auth.loginAndGetAccessToken(new LoginBodyModel(username, password));
+        UserFixtures.TestUser user = UserFixtures.createAndLogin(api);
+        token = user.token();
     }
 
     @AfterEach
@@ -41,7 +34,7 @@ class ClubsCrudTests extends TestBase {
     @Tag("SMOKE")
     @Description("Создание клуба возвращает 201 и заполненный объект клуба")
     void createClub_returnsCreatedClub() {
-        CreateClubBodyModel body = ClubFixtures.sampleClub(uid);
+        CreateClubBodyModel body = ClubFixtures.sampleClub();
 
         ClubModel created = api.clubs.createClub(token, body);
 
@@ -58,8 +51,13 @@ class ClubsCrudTests extends TestBase {
             step("telegramChatLink совпадает с body", () -> assertThat(created.telegramChatLink())
                     .isEqualTo(body.telegramChatLink()));
             step("owner — положительный id", () -> assertThat(created.owner()).isPositive());
-            step("members не null", () -> assertThat(created.members()).isNotNull());
-            step("reviews не null", () -> assertThat(created.reviews()).isNotNull());
+            step("members содержит только owner", () -> assertThat(created.members())
+                    .containsExactly(created.owner()));
+            step("reviews пустой", () -> assertThat(created.reviews()).isEmpty());
+            step("created — timestamp в ISO 8601 (UTC)", () -> assertThat(created.created())
+                    .matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z"));
+            step("modified не задан после создания", () -> assertThat(created.modified())
+                    .isNull());
         });
     }
 
@@ -67,7 +65,7 @@ class ClubsCrudTests extends TestBase {
     @Tag("SMOKE")
     @Description("Получение клуба по id возвращает данные созданного клуба")
     void getClubById_returnsClubData() {
-        ClubModel created = api.clubs.createClub(token, ClubFixtures.sampleClub(uid));
+        ClubModel created = api.clubs.createClub(token, ClubFixtures.sampleClub());
 
         ClubModel fetched = api.clubs.getClub(token, created.id());
 
@@ -75,8 +73,22 @@ class ClubsCrudTests extends TestBase {
             step("id совпадает с созданным", () -> assertThat(fetched.id()).isEqualTo(created.id()));
             step("bookTitle совпадает с созданным", () -> assertThat(fetched.bookTitle())
                     .isEqualTo(created.bookTitle()));
+            step("bookAuthors совпадает с созданным", () -> assertThat(fetched.bookAuthors())
+                    .isEqualTo(created.bookAuthors()));
+            step("publicationYear совпадает с созданным", () -> assertThat(fetched.publicationYear())
+                    .isEqualTo(created.publicationYear()));
+            step("description совпадает с созданным", () -> assertThat(fetched.description())
+                    .isEqualTo(created.description()));
+            step("telegramChatLink совпадает с созданным", () -> assertThat(fetched.telegramChatLink())
+                    .isEqualTo(created.telegramChatLink()));
             step("owner совпадает с созданным", () -> assertThat(fetched.owner())
                     .isEqualTo(created.owner()));
+            step("members совпадает с созданным", () -> assertThat(fetched.members())
+                    .isEqualTo(created.members()));
+            step("reviews совпадает с созданным", () -> assertThat(fetched.reviews())
+                    .isEqualTo(created.reviews()));
+            step("created совпадает с созданным", () -> assertThat(fetched.created())
+                    .isEqualTo(created.created()));
         });
     }
 
@@ -84,27 +96,22 @@ class ClubsCrudTests extends TestBase {
     @Tag("SMOKE")
     @Description("PUT клуба полностью заменяет все поля")
     void updateClubWithPut_replacesAllFields() {
-        ClubModel created = api.clubs.createClub(token, ClubFixtures.sampleClub(uid));
+        ClubModel created = api.clubs.createClub(token, ClubFixtures.sampleClub());
 
-        String updatedTitle = "Updated Book " + uid;
-        String updatedAuthor = "Updated Author " + uid;
-        String updatedDescription = "Updated description " + uid;
-        String updatedLink = "https://t.me/updated_" + uid;
-
-        CreateClubBodyModel updateBody =
-                new CreateClubBodyModel(updatedTitle, updatedAuthor, 1999, updatedDescription, updatedLink);
-
+        CreateClubBodyModel updateBody = ClubFixtures.sampleClub();
         ClubModel updated = api.clubs.updateClub(token, created.id(), updateBody);
 
         step("Проверки", () -> {
             step("id не изменился", () -> assertThat(updated.id()).isEqualTo(created.id()));
-            step("bookTitle обновлён", () -> assertThat(updated.bookTitle()).isEqualTo(updatedTitle));
-            step("bookAuthors обновлён", () -> assertThat(updated.bookAuthors()).isEqualTo(updatedAuthor));
-            step("publicationYear обновлён на 1999", () -> assertThat(updated.publicationYear())
-                    .isEqualTo(1999));
-            step("description обновлён", () -> assertThat(updated.description()).isEqualTo(updatedDescription));
+            step("bookTitle обновлён", () -> assertThat(updated.bookTitle()).isEqualTo(updateBody.bookTitle()));
+            step("bookAuthors обновлён", () -> assertThat(updated.bookAuthors()).isEqualTo(updateBody.bookAuthors()));
+            step("publicationYear обновлён", () -> assertThat(updated.publicationYear())
+                    .isEqualTo(updateBody.publicationYear()));
+            step("description обновлён", () -> assertThat(updated.description()).isEqualTo(updateBody.description()));
             step("telegramChatLink обновлён", () -> assertThat(updated.telegramChatLink())
-                    .isEqualTo(updatedLink));
+                    .isEqualTo(updateBody.telegramChatLink()));
+            step("bookTitle отличается от исходного", () -> assertThat(updated.bookTitle())
+                    .isNotEqualTo(created.bookTitle()));
         });
     }
 
@@ -112,15 +119,16 @@ class ClubsCrudTests extends TestBase {
     @Tag("SMOKE")
     @Description("PATCH клуба обновляет только переданные поля")
     void patchClubWithPatch_updatesPartialFields() {
-        CreateClubBodyModel originalBody = ClubFixtures.sampleClub(uid);
+        CreateClubBodyModel originalBody = ClubFixtures.sampleClub();
         ClubModel created = api.clubs.createClub(token, originalBody);
 
+        String patchedDescription = FAKER.lorem().sentence(10);
+
         ClubModel patched = api.clubs.patchClub(
-                token, created.id(), new UpdateClubBodyModel(null, null, null, "Patched description", null));
+                token, created.id(), new UpdateClubBodyModel(null, null, null, patchedDescription, null));
 
         step("Проверки", () -> {
-            step("description обновлён на 'Patched description'", () -> assertThat(patched.description())
-                    .isEqualTo("Patched description"));
+            step("description обновлён", () -> assertThat(patched.description()).isEqualTo(patchedDescription));
             step("bookTitle не изменился", () -> assertThat(patched.bookTitle()).isEqualTo(originalBody.bookTitle()));
             step("bookAuthors не изменился", () -> assertThat(patched.bookAuthors())
                     .isEqualTo(originalBody.bookAuthors()));
@@ -135,7 +143,7 @@ class ClubsCrudTests extends TestBase {
     @Tag("SMOKE")
     @Description("DELETE клуба возвращает 204, последующий GET — 404")
     void deleteClub_returns204_andSubsequentGetReturns404() {
-        ClubModel created = api.clubs.createClub(token, ClubFixtures.sampleClub(uid));
+        ClubModel created = api.clubs.createClub(token, ClubFixtures.sampleClub());
 
         api.clubs.deleteClub(token, created.id());
         api.clubs.getClubNotFound(token, created.id());
@@ -150,6 +158,6 @@ class ClubsCrudTests extends TestBase {
     @Test
     @Description("POST /clubs/ без авторизации возвращает 401")
     void createClubWithoutAuth_returns401() {
-        api.clubs.createClubUnauthorized(ClubFixtures.sampleClub(uid));
+        api.clubs.createClubUnauthorized(ClubFixtures.sampleClub());
     }
 }

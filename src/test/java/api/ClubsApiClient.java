@@ -1,10 +1,12 @@
 package api;
 
 import static io.restassured.RestAssured.given;
+import static specs.BaseSpec.baseRequestSpec;
+import static specs.clubs.ClubsSpec.clubBadRequestResponseSpec;
+import static specs.clubs.ClubsSpec.clubForbiddenResponseSpec;
 import static specs.clubs.ClubsSpec.clubNoContentResponseSpec;
 import static specs.clubs.ClubsSpec.clubNotFoundResponseSpec;
 import static specs.clubs.ClubsSpec.clubUnauthorizedResponseSpec;
-import static specs.clubs.ClubsSpec.clubsRequestSpec;
 import static specs.clubs.ClubsSpec.createdClubResponseSpec;
 import static specs.clubs.ClubsSpec.createdReviewResponseSpec;
 import static specs.clubs.ClubsSpec.successfulClubResponseSpec;
@@ -27,7 +29,7 @@ public class ClubsApiClient {
 
     @Step("Получение списка клубов GET /clubs/")
     public ClubsListResponseModel getClubs() {
-        return given(clubsRequestSpec)
+        return given(baseRequestSpec)
                 .when()
                 .get("/clubs/")
                 .then()
@@ -85,30 +87,17 @@ public class ClubsApiClient {
 
     @Step("Удаление клуба DELETE /clubs/{id}/")
     public void deleteClub(String token, Integer id) {
-        given(authRequestSpec(token))
-                .when()
-                .delete("/clubs/{id}/", id)
-                .then()
-                .spec(clubNoContentResponseSpec);
+        given(authRequestSpec(token)).when().delete("/clubs/{id}/", id).then().spec(clubNoContentResponseSpec);
     }
 
     @Step("Получение несуществующего клуба — ожидается 404")
     public void getClubNotFound(String token, Integer id) {
-        given(authRequestSpec(token))
-                .when()
-                .get("/clubs/{id}/", id)
-                .then()
-                .spec(clubNotFoundResponseSpec);
+        given(authRequestSpec(token)).when().get("/clubs/{id}/", id).then().spec(clubNotFoundResponseSpec);
     }
 
     @Step("Создание клуба без авторизации — ожидается 401")
     public void createClubUnauthorized(CreateClubBodyModel body) {
-        given(clubsRequestSpec)
-                .body(body)
-                .when()
-                .post("/clubs/")
-                .then()
-                .spec(clubUnauthorizedResponseSpec);
+        given(baseRequestSpec).body(body).when().post("/clubs/").then().spec(clubUnauthorizedResponseSpec);
     }
 
     @Step("Вступление в клуб POST /clubs/{id}/members/me/")
@@ -203,5 +192,99 @@ public class ClubsApiClient {
                 .get("/clubs/reviews/{id}/", id)
                 .then()
                 .spec(clubNotFoundResponseSpec);
+    }
+
+    @Step("PUT клуба чужим юзером — ожидается 403")
+    public void updateClubForbidden(String token, Integer id, CreateClubBodyModel body) {
+        given(authRequestSpec(token))
+                .body(body)
+                .when()
+                .put("/clubs/{id}/", id)
+                .then()
+                .spec(clubForbiddenResponseSpec);
+    }
+
+    @Step("PATCH клуба чужим юзером — ожидается 403")
+    public void patchClubForbidden(String token, Integer id, UpdateClubBodyModel body) {
+        given(authRequestSpec(token))
+                .body(body)
+                .when()
+                .patch("/clubs/{id}/", id)
+                .then()
+                .spec(clubForbiddenResponseSpec);
+    }
+
+    @Step("DELETE клуба чужим юзером — ожидается 403")
+    public void deleteClubForbidden(String token, Integer id) {
+        given(authRequestSpec(token)).when().delete("/clubs/{id}/", id).then().spec(clubForbiddenResponseSpec);
+    }
+
+    @Step("POST рецензии без авторизации — ожидается 401")
+    public void createReviewUnauthorized(CreateReviewBodyModel body) {
+        given(baseRequestSpec).body(body).when().post("/clubs/reviews/").then().spec(clubUnauthorizedResponseSpec);
+    }
+
+    @Step("PUT рецензии без авторизации — ожидается 401")
+    public void updateReviewUnauthorized(Integer id, CreateReviewBodyModel body) {
+        given(baseRequestSpec)
+                .body(body)
+                .when()
+                .put("/clubs/reviews/{id}/", id)
+                .then()
+                .spec(clubUnauthorizedResponseSpec);
+    }
+
+    @Step("PATCH рецензии без авторизации — ожидается 401")
+    public void patchReviewUnauthorized(Integer id, UpdateReviewBodyModel body) {
+        given(baseRequestSpec)
+                .body(body)
+                .when()
+                .patch("/clubs/reviews/{id}/", id)
+                .then()
+                .spec(clubUnauthorizedResponseSpec);
+    }
+
+    @Step("DELETE рецензии без авторизации — ожидается 401")
+    public void deleteReviewUnauthorized(Integer id) {
+        given(baseRequestSpec).when().delete("/clubs/reviews/{id}/", id).then().spec(clubUnauthorizedResponseSpec);
+    }
+
+    @Step("PUT рецензии чужим юзером — ожидается 403")
+    public void updateReviewForbidden(String token, Integer id, CreateReviewBodyModel body) {
+        given(authRequestSpec(token))
+                .body(body)
+                .when()
+                .put("/clubs/reviews/{id}/", id)
+                .then()
+                .spec(clubForbiddenResponseSpec);
+    }
+
+    @Step("PATCH рецензии чужим юзером — ожидается 403")
+    public void patchReviewForbidden(String token, Integer id, UpdateReviewBodyModel body) {
+        given(authRequestSpec(token))
+                .body(body)
+                .when()
+                .patch("/clubs/reviews/{id}/", id)
+                .then()
+                .spec(clubForbiddenResponseSpec);
+    }
+
+    @Step("DELETE рецензии чужим юзером — ожидается 403")
+    public void deleteReviewForbidden(String token, Integer id) {
+        given(authRequestSpec(token))
+                .when()
+                .delete("/clubs/reviews/{id}/", id)
+                .then()
+                .spec(clubForbiddenResponseSpec);
+    }
+
+    @Step("POST рецензии с невалидным телом — ожидается 400")
+    public void createReviewWithBadRequest(String token, CreateReviewBodyModel body) {
+        given(authRequestSpec(token))
+                .body(body)
+                .when()
+                .post("/clubs/reviews/")
+                .then()
+                .spec(clubBadRequestResponseSpec);
     }
 }

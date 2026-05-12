@@ -2,11 +2,11 @@ package tests;
 
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
+import static tests.Fakers.shortUid;
 import static tests.TestData.REGISTRATION_EXISTING_USER_ERROR;
 import static tests.TestData.REGISTRATION_IP_REGEXP;
 
 import io.qameta.allure.Description;
-import java.util.UUID;
 import models.ValidationErrorResponseModel;
 import models.login.LoginBodyModel;
 import models.registration.ExistingUserResponseModel;
@@ -21,13 +21,13 @@ import org.junit.jupiter.api.Test;
 @Tag("REGRESS")
 class RegistrationTests extends TestBase {
 
-    String username;
-    String password;
-    boolean userCreated;
+    private String username;
+    private String password;
+    private boolean userCreated;
 
     @BeforeEach
     void prepareTestData() {
-        String uid = UUID.randomUUID().toString().substring(0, 8);
+        String uid = shortUid();
         username = "user_" + uid;
         password = "pass_" + uid;
         userCreated = false;

@@ -1,15 +1,19 @@
 package tests;
 
+import static tests.Fakers.FAKER;
+import static tests.Fakers.shortUid;
+
 import models.clubs.CreateClubBodyModel;
 
-class ClubFixtures {
+public class ClubFixtures {
 
-    static CreateClubBodyModel sampleClub(String uid) {
+    public static CreateClubBodyModel sampleClub() {
+        String uniqueSuffix = shortUid();
         return new CreateClubBodyModel(
-                "Book " + uid,
-                "Author " + uid,
-                2024,
-                "Description " + uid,
-                "https://t.me/bookclub_" + uid);
+                FAKER.book().title() + " #" + uniqueSuffix,
+                FAKER.book().author(),
+                FAKER.number().numberBetween(1900, 2025),
+                FAKER.lorem().sentence(15),
+                "https://t.me/club_" + uniqueSuffix);
     }
 }
