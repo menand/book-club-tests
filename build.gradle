@@ -83,12 +83,11 @@ dependencies {
 tasks.test {
     systemProperty "allure.results.directory", file("${buildDir}/allure-results").absolutePath
 
-    ["api.baseUri", "api.basePath"].each { key ->
-        def value = System.getProperty(key)
-        if (value != null) {
-            systemProperty(key, value)
-        }
-    }
+    System.properties.findAll { entry ->
+        String key = entry.key.toString()
+        key.startsWith("api.") || key.startsWith("ui.") ||
+                key.startsWith("selenide.") || key in ["browser", "headless"]
+    }.each { key, value -> systemProperty(key.toString(), value) }
 
     useJUnitPlatform {
         String tags = System.getProperty("groups")
