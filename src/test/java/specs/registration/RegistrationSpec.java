@@ -1,6 +1,7 @@
 package specs.registration;
 
 import static io.restassured.filter.log.LogDetail.ALL;
+import static io.restassured.http.ContentType.JSON;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
@@ -13,6 +14,7 @@ public class RegistrationSpec {
     public static final ResponseSpecification successfulRegistrationResponseSpec = new ResponseSpecBuilder()
             .log(ALL)
             .expectStatusCode(201)
+            .expectContentType(JSON)
             .expectBody(
                     matchesJsonSchemaInClasspath("schemas/registration/successful_registration_response_schema.json"))
             .expectBody("id", notNullValue())
@@ -23,6 +25,7 @@ public class RegistrationSpec {
     public static final ResponseSpecification existingUserRegistrationResponseSpec = new ResponseSpecBuilder()
             .log(ALL)
             .expectStatusCode(400)
+            .expectContentType(JSON)
             .expectBody(matchesJsonSchemaInClasspath(
                     "schemas/registration/existing_user_registration_response_schema.json"))
             .expectBody("username", notNullValue())

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("USER")
+@Tag("API")
 @Tag("REGRESS")
 class UpdateUserTests extends TestBase {
 

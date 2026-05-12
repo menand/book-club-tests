@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("REGISTRATION")
+@Tag("API")
 @Tag("REGRESS")
 class RegistrationTests extends TestBase {
 

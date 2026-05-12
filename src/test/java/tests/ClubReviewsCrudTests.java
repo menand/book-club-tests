@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("CLUBS")
+@Tag("API")
 @Tag("REGRESS")
 class ClubReviewsCrudTests extends TestBase {
 

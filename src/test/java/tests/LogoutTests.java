@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("LOGOUT")
+@Tag("API")
 @Tag("REGRESS")
 class LogoutTests extends TestBase {
 
