@@ -75,6 +75,7 @@ dependencies {
     testImplementation "io.qameta.allure:allure-selenide:$allureVersion"
 
     testImplementation 'net.datafaker:datafaker:2.5.4'
+    testImplementation 'org.aeonbits.owner:owner:1.0.12'
 
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
 
@@ -82,11 +83,12 @@ dependencies {
 }
 tasks.test {
     systemProperty "allure.results.directory", file("${buildDir}/allure-results").absolutePath
+    systemProperty "env", System.getProperty("env", "local")
 
     System.properties.findAll { entry ->
         String key = entry.key.toString()
         key.startsWith("api.") || key.startsWith("ui.") ||
-                key.startsWith("selenide.") || key in ["browser", "headless"]
+                key.startsWith("selenide.") || key in ["browser", "browserVersion", "headless", "remoteUrl"]
     }.each { key, value -> systemProperty(key.toString(), value) }
 
     useJUnitPlatform {

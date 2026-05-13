@@ -105,6 +105,7 @@ src/test/
 - **UI:** Selenide 7.16+
 - **Валидация:** JSON Schema Validator
 - **Тестовые данные:** Datafaker
+- **Конфиги:** Owner (org.aeonbits.owner)
 - **Отчётность:** Allure, allure-selenide
 - **Утилиты:** Jackson
 - **Форматирование:** Spotless с **palantir-java-format** (без wildcard-импортов)
@@ -127,15 +128,33 @@ src/test/
 
 > **Внимание:** `spotlessApply` **не** запускается автоматически перед `test`. Если форматирование сбито — `./gradlew test` пройдёт, а `./gradlew check` упадёт. Запустите `./gradlew spotlessApply` вручную перед коммитом.
 
-### Запуск UI через Selenoid (Jenkins)
+### Профили запуска (Owner)
+
+Конфигурация UI и Selenide управляется через **Owner**-конфиг и properties-файлы. Профиль выбирается через `-Denv=...` (по умолчанию `local`).
 
 ```bash
-./gradlew test -Dgroups=UI \
-    -Dselenide.remote=https://user:pass@selenoid.host/wd/hub \
-    -DbrowserVersion=128.0
+./gradlew test -Dgroups=UI                      # env=local (по умолчанию)
+./gradlew test -Dgroups=UI -Denv=remote         # Selenoid из remote.properties
+./gradlew test -Dgroups=UI -Denv=remote -DbrowserVersion=132.0  # переопределить версию
 ```
 
-При `selenide.remote` Selenide использует remote-WebDriver, `headless` игнорируется (Selenoid сам управляет Chrome). VNC и видео включаются автоматически через `selenoid:options`.
+Файлы конфигов:
+- `src/test/resources/local.properties` — локальный запуск (Chrome через WebDriverManager, headless).
+- `src/test/resources/remote.properties` — Selenoid (содержит `remoteUrl=https://user:pass@selenoid.host/wd/hub`).
+
+Любое значение из properties можно переопределить через `-D<key>=<value>` (например `-Dbrowser=firefox`, `-DbrowserVersion=132.0`, `-DremoteUrl=...`).
+
+При наличии `remoteUrl` Selenide использует remote-WebDriver, `headless` игнорируется (Selenoid сам управляет Chrome). VNC и видео включаются автоматически через `selenoid:options`.
+
+Контракт WebConfig (`tests/config/WebConfig.java`):
+
+| Ключ | Default | Описание |
+|---|---|---|
+| `browser` | `chrome` | Selenide browser |
+| `browserVersion` | `128.0` | Версия (важна для Selenoid) |
+| `browserSize` | `1920x1080` | Размер окна |
+| `uiBaseUri` | `https://book-club.qa.guru` | Базовый URI UI |
+| `remoteUrl` | — | URL Selenoid hub (если задан → remote режим) |
 
 ### Параллельный запуск
 
@@ -167,13 +186,15 @@ src/test/
 | `api.baseUri` | Базовый URI API | `https://book-club.qa.guru` |
 | `api.basePath` | Базовый путь API | `/api/v1` |
 | `ui.baseUri` | Базовый URI UI | `https://book-club.qa.guru` |
-| `browser` | Selenide browser | `chrome` |
+| `env` | Профиль Owner-конфига (`local`/`remote`) | `local` |
+| `browser` | Selenide browser | из `${env}.properties` |
+| `browserVersion` | Версия браузера для Selenoid | из `${env}.properties` |
+| `browserSize` | Размер окна | из `${env}.properties` |
 | `headless` | Selenide headless (только local) | `true` |
-| `selenide.remote` | URL Selenoid hub (`https://user:pass@host/wd/hub`) | — |
-| `browserVersion` | Версия браузера для Selenoid | `128.0` |
+| `remoteUrl` | URL Selenoid hub | из `remote.properties` |
 | `allure.results.directory` | Директория результатов Allure | `build/allure-results` |
 
-Все `api.*`, `ui.*`, `selenide.*`, `browser`, `headless`, `groups` прокидываются в форкнутую JVM теста.
+Все `api.*`, `ui.*`, `selenide.*`, `env`, `browser`, `browserVersion`, `headless`, `remoteUrl`, `groups` прокидываются в форкнутую JVM теста.
 
 ## Написание тестов
 

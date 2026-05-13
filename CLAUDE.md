@@ -68,9 +68,17 @@ resources/tpl/               ← request.ftl / response.ftl (Allure)
 
 ### UI (Selenide)
 
-- `UiTestBase extends TestBase` — Selenide-конфиг (`Configuration.baseUrl`, `browser`, `browserSize`, `timeout`, `headless`), AllureSelenide listener, `closeWebDriver()` после каждого теста. Поддержка `-Dselenide.remote=...` → Selenoid с `enableVNC`/`enableVideo` и `browserVersion`.
+- `UiTestBase extends TestBase` — читает `WebConfig` (Owner) и настраивает Selenide. AllureSelenide listener, `closeWebDriver()` после каждого теста. Если задан `remoteUrl` → Selenoid с `enableVNC`/`enableVideo` и `browserVersion`.
 - `BrowserAuth.loginViaApiAndOpenHome(api)` — регистрирует юзера через API, логинится, открывает `/`, кладёт точный JSON в `localStorage["book_club_auth"]` (структура подтверждена эмпирически), возвращает `AuthSession`. Подготовка UI-тестов идёт через API — UI логин используется только в `UiAuthTests`.
 - Page Objects (`tests/ui/pages/`): `SignInPage`, `SignUpPage`, `ClubsListPage`, `ClubDetailPage`, `ReviewFormPage`. Селекторы — `data-testid` где есть, иначе CSS-классы Vue (`.club-card`, `.review-card`, `.add-review-btn`, `.pagination-button`, `.no-reviews`).
+
+### Owner-конфиг (профили)
+
+- `tests/config/WebConfig.java` — интерфейс Owner с ключами `browser`, `browserVersion`, `browserSize`, `uiBaseUri`, `remoteUrl`.
+- `src/test/resources/${env}.properties` — `local.properties` (default) и `remote.properties` (с Selenoid `remoteUrl`).
+- Выбор профиля: `-Denv=local` (default) или `-Denv=remote`.
+- Переопределение: `-D<key>=<value>` бьёт значение в properties (например `-DbrowserVersion=132.0`).
+- `env=local` прокидывается в JVM теста через `tasks.test { systemProperty "env", ... }` с дефолтом.
 
 ### TestBase
 
@@ -102,14 +110,16 @@ resources/tpl/               ← request.ftl / response.ftl (Allure)
 | Параметр | Назначение | Default |
 |---|---|---|
 | `groups` | Теги (`API`, `UI`, `SMOKE`, ...) | — |
+| `env` | Owner-профиль (`local`/`remote`) | `local` |
 | `api.baseUri` / `api.basePath` | API | `https://book-club.qa.guru` / `/api/v1` |
-| `ui.baseUri` | UI | `https://book-club.qa.guru` |
-| `browser` | Selenide | `chrome` |
+| `ui.baseUri` | UI (через WebConfig) | из `${env}.properties` |
+| `browser` | Selenide | из `${env}.properties` |
+| `browserVersion` | Selenoid | из `${env}.properties` |
+| `browserSize` | Selenide | из `${env}.properties` |
 | `headless` | Selenide local | `true` |
-| `selenide.remote` | Selenoid hub URL | — |
-| `browserVersion` | Selenoid | `128.0` |
+| `remoteUrl` | Selenoid hub URL | из `remote.properties` |
 
-В `build.gradle` все `api.*`, `ui.*`, `selenide.*`, `browser`, `headless` прокидываются в форкнутую JVM теста.
+В `build.gradle` все `api.*`, `ui.*`, `selenide.*`, `env`, `browser`, `browserVersion`, `headless`, `remoteUrl` прокидываются в форкнутую JVM теста.
 
 ## Конвенции при изменениях
 
