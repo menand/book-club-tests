@@ -9,6 +9,7 @@ import java.util.Map;
 import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import tests.TestBase;
 import tests.config.WebConfig;
@@ -34,12 +35,16 @@ public abstract class UiTestBase extends TestBase {
             capabilities.setCapability("selenoid:options", Map.of("enableVNC", true, "enableVideo", true));
             Configuration.browserCapabilities = capabilities;
         }
+    }
 
-        SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
+    @BeforeEach
+    void addListener() {
+        SelenideLogger.addListener("allure", new AllureSelenide());
     }
 
     @AfterEach
     void closeBrowser() {
+        SelenideLogger.removeListener("allure");
         closeWebDriver();
     }
 }
